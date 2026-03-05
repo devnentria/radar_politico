@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radar Político — Inteligencia Electoral</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060b18;--card:#0d1626;--card2:#0f1c34;--border:#1a2f50;--bhi:#1e4080;
+  --blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;
+  --text:#e2e8f0;--dim:#94a3b8;--muted:#64748b}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+.hdr{background:rgba(6,11,24,.96);border-bottom:1px solid var(--border);padding:9px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1100;backdrop-filter:blur(16px)}
+.logo{font-size:19px;font-weight:800;color:#fff}.logo span{color:var(--cyan)}.logo em{font-size:9px;font-weight:400;color:var(--muted);letter-spacing:1px;font-style:normal;margin-left:3px}
+.sep{width:1px;height:30px;background:var(--border);margin:0 14px}
+.av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}
+.cname{font-weight:700;font-size:14px}.cmeta{font-size:10px;color:var(--muted)}
+.hright{display:flex;align-items:center;gap:10px}
+.ptag{font-size:10px;color:var(--muted);background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:3px 9px}
+.live{display:flex;align-items:center;gap:5px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:18px;padding:3px 11px;font-size:10px;font-weight:800;color:#ef4444;text-transform:uppercase;letter-spacing:1px}
+.ldot{width:6px;height:6px;border-radius:50%;background:#ef4444;animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+#clock{font-size:12px;color:var(--dim);min-width:60px;text-align:right;font-variant-numeric:tabular-nums}
+.wrap{padding:14px 18px;max-width:1580px;margin:0 auto}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--blue))}
+.klbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+.kval{font-size:22px;font-weight:800;color:var(--kc,var(--blue));line-height:1;margin-bottom:3px}
+.ksub{font-size:10px;color:var(--muted)}.up{color:var(--green)}.dn{color:var(--red)}
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px}
+.ctitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+/* ROWS */
+.r1{display:grid;grid-template-columns:220px 1fr 220px;gap:11px;margin-bottom:11px}
+.r2{margin-bottom:11px}
+.r3{display:grid;grid-template-columns:1fr 1fr 320px;gap:11px;margin-bottom:11px}
+.r4{display:grid;grid-template-columns:1fr 340px;gap:11px;margin-bottom:11px}
+.r5{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:11px}
+/* SENTIMENT */
+.scwrap{position:relative;width:148px;height:148px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+#sentChart{position:absolute;top:0;left:0}
+.scenter{position:relative;z-index:1;text-align:center}
+.spct{font-size:26px;font-weight:800;color:var(--amber);line-height:1}
+.slbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.srow{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.sdot{width:7px;height:7px;border-radius:50%;margin-right:5px;flex-shrink:0}
+.sname{display:flex;align-items:center;font-size:11px;color:var(--dim);flex:1}
+.snum{font-size:12px;font-weight:700}
+.sbar{height:3px;background:var(--border);border-radius:2px;margin-bottom:7px;overflow:hidden}
+.sfill{height:100%;border-radius:2px;transition:width 1.2s ease}
+/* PLATFORM */
+.pi{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.pico{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.pname{font-size:11px;color:var(--dim);flex:1}
+.pbg{flex:2;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.pfill{height:100%;border-radius:3px;transition:width 1.2s ease}
+.ppct{font-size:10px;font-weight:700;min-width:26px;text-align:right}
+/* MAP */
+#mapWrap{position:relative;width:100%;background:var(--card2);border-radius:8px;overflow:hidden}
+.map-legend{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}
+.ml-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim)}
+.ml-dot{width:12px;height:12px;border-radius:2px}
+/* TOPICS */
+.tcloud{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.tc{border-radius:14px;padding:4px 10px;font-weight:500;cursor:default;border:1px solid transparent;transition:transform .15s}
+.tc:hover{transform:scale(1.04)}
+/* DEMANDS */
+.dr{margin-bottom:8px}
+.dh{display:flex;justify-content:space-between;margin-bottom:2px}
+.dtxt{font-size:11px;color:var(--dim)}
+.dpct{font-size:11px;font-weight:700;color:var(--amber)}
+.dbg{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.dbar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),var(--blue));transition:width 1.2s ease}
+/* PREDICTIONS */
+.pred-item{background:var(--card2);border-radius:7px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
+.pred-ico{font-size:20px;flex-shrink:0}
+.pred-title{font-size:12px;font-weight:600;margin-bottom:2px}
+.pred-val{font-size:18px;font-weight:800}
+.pred-sub{font-size:10px;color:var(--muted)}
+/* STRATEGY */
+.ai{background:var(--card2);border-left:3px solid var(--ac,var(--amber));border-radius:7px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:flex-start;gap:9px}
+.aico{font-size:16px;flex-shrink:0}
+.atitle{font-size:12px;font-weight:700;margin-bottom:2px}
+.adesc{font-size:11px;color:var(--muted);line-height:1.5}
+/* FEED */
+.fscroll{max-height:460px;overflow-y:auto}
+.fscroll::-webkit-scrollbar{width:3px}
+.fscroll::-webkit-scrollbar-thumb{background:var(--bhi);border-radius:2px}
+.mi{background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin-bottom:5px}
+.mtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.msrc{font-size:10px;font-weight:600;color:var(--dim);display:flex;align-items:center;gap:4px}
+.mdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.mdate{font-size:9px;color:var(--muted)}
+.mbody{font-size:11px;color:var(--dim);line-height:1.45}
+.sb{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700;text-transform:uppercase}
+.sp{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.sn{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.su{background:rgba(100,116,139,.12);color:#94a3b8;border:1px solid rgba(100,116,139,.3)}
+/* MINI STAT */
+.mstat{background:var(--card2);border-radius:7px;padding:10px 12px;border:1px solid var(--border);text-align:center}
+.mstat-val{font-size:20px;font-weight:800;line-height:1}
+.mstat-lbl{font-size:10px;color:var(--muted);margin-top:3px}
+/* EVTAG */
+.evtag{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:5px;font-size:10px;margin:3px 3px 0 0}
+/* TREND NOTES */
+.tnotes{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.tn{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--dim)}
+.tnl{width:14px;height:2px;border-radius:1px;flex-shrink:0}
+footer{text-align:center;padding:12px;color:var(--muted);font-size:10px;border-top:1px solid var(--border)}
+footer b{color:var(--cyan)}
+/* LEAFLET MAP */
+#mapLeaflet{width:100%;height:500px;border-radius:8px;overflow:hidden}
+.leaflet-container{background:#060b18!important}
+.leaflet-popup-content-wrapper{background:#0d1626!important;border:1px solid #1a2f50!important;color:#e2e8f0!important;border-radius:9px!important;box-shadow:0 4px 24px rgba(0,0,0,.5)!important}
+.leaflet-popup-tip{background:#0d1626!important}
+.leaflet-popup-close-button{color:#94a3b8!important}
+.leaflet-control-zoom a{background:#0d1626!important;color:#94a3b8!important;border-color:#1a2f50!important}
+.leaflet-control-zoom a:hover{background:#0f1c34!important;color:#e2e8f0!important}
+.leaflet-control-attribution{background:rgba(6,11,24,.7)!important;color:#64748b!important}
+.leaflet-control-attribution a{color:#3b82f6!important}
+/* LOADING */
+#loadingOverlay{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.loader-ring{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* CHAT WIDGET */
+#chatBtn{position:fixed;bottom:24px;right:24px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(59,130,246,.45);z-index:1000;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
+#chatBtn:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(59,130,246,.6)}
+#chatBtn .cbadge{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--red);border-radius:50%;border:2px solid var(--bg);animation:blink 1.4s infinite}
+#chatPanel{position:fixed;bottom:90px;right:24px;width:380px;height:530px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;z-index:999;box-shadow:0 12px 48px rgba(0,0,0,.65);transition:opacity .2s,transform .2s;opacity:0;transform:translateY(12px) scale(.97);pointer-events:none}
+#chatPanel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+#chatHead{padding:13px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#chatHead .chat-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:13px;margin-right:9px;flex-shrink:0}
+#chatHead .chat-info{flex:1}
+#chatHead .chat-title{font-size:13px;font-weight:800}
+#chatHead .chat-title span{color:var(--cyan)}
+#chatHead .chat-sub{font-size:10px;color:var(--muted)}
+#chatClose{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;line-height:1}
+#chatClose:hover{color:var(--text)}
+#chatMsgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
+#chatMsgs::-webkit-scrollbar{width:3px}
+#chatMsgs::-webkit-scrollbar-thumb{background:var(--bhi);border-radius:2px}
+.cmsg{max-width:88%;padding:9px 12px;border-radius:10px;font-size:12px;line-height:1.6;animation:msgIn .18s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.cmsg.bot{background:var(--card2);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px}
+.cmsg.user{background:rgba(59,130,246,.16);border:1px solid rgba(59,130,246,.28);color:var(--text);align-self:flex-end;border-bottom-right-radius:3px;white-space:pre-wrap}
+.cmsg.typing{color:var(--muted);font-style:italic}
+.cmsg.bot .mh3{font-size:12px;font-weight:800;color:var(--cyan);margin:8px 0 3px}
+.cmsg.bot .mh2{font-size:13px;font-weight:800;color:var(--text);margin:8px 0 3px}
+.cmsg.bot .mli{display:flex;gap:6px;margin:2px 0}
+.cmsg.bot .mlin{color:var(--cyan);font-weight:700;min-width:18px;flex-shrink:0}
+.cmsg.bot .mlib{color:var(--blue);flex-shrink:0}
+.cmsg.bot strong{color:var(--text);font-weight:700}
+.cmsg.bot em{color:var(--dim);font-style:italic}
+/* COMP */
+.comp-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px 13px}
+.comp-name{font-size:12px;font-weight:700;margin-bottom:2px}
+.comp-party{font-size:10px;color:var(--muted);margin-bottom:8px}
+.comp-metric{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:3px}
+.comp-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px}
+.comp-fill{height:100%;border-radius:2px;transition:width 1.2s ease}
+#chatSuggs{display:flex;flex-wrap:wrap;gap:5px;padding:0 12px 8px}
+.csugg{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:4px 10px;font-size:10px;color:var(--dim);cursor:pointer;transition:border-color .15s,color .15s}
+.csugg:hover{border-color:var(--blue);color:var(--text)}
+#chatFoot{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+#chatInp{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;resize:none;height:36px;font-family:inherit}
+#chatInp:focus{border-color:var(--blue)}
+#chatInp::placeholder{color:var(--muted)}
+#chatSend{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--purple));border:none;border-radius:8px;color:#fff;font-size:16px;cursor:pointer;transition:opacity .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#chatSend:hover{opacity:.85}
+#chatSend:disabled{opacity:.35;cursor:not-allowed}
+@media(max-width:420px){#chatPanel{width:calc(100vw - 16px);right:8px}}
+@media(max-width:1100px){.r1,.r3,.r4,.r5{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingOverlay">
+  <div class="loader-ring"></div>
+  <div style="font-size:12px;color:var(--muted)">Cargando datos del monitor…</div>
+</div>
+
+<header class="hdr">
+  <div style="display:flex;align-items:center">
+    <div class="logo">Radar <span>Político</span><em>IA</em></div>
+    <div class="sep"></div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <div class="av">CS</div>
+      <div><div class="cname" id="hdrName">Claudia Sheinbaum</div><div class="cmeta" id="hdrMeta">Presidenta · Morena · México</div></div>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="ptag" id="hdrPeriod">2 Feb — 4 Mar 2026</div>
+    <div class="live"><div class="ldot"></div>En Vivo</div>
+    <div id="clock"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 6 KPIs -->
+  <div class="kpis">
+    <div class="kpi" style="--kc:var(--blue)"><div class="klbl">Total Menciones</div><div class="kval" id="k1">—</div><div class="ksub"><span class="up" id="k1c">▲ —%</span> vs anterior</div></div>
+    <div class="kpi" style="--kc:var(--cyan)"><div class="klbl">Alcance Redes</div><div class="kval" id="k2">—</div><div class="ksub">personas alcanzadas</div></div>
+    <div class="kpi" style="--kc:var(--purple)"><div class="klbl">Interacciones</div><div class="kval" id="k3">—</div><div class="ksub"><span class="up" id="k3c">▲ —%</span> engagement</div></div>
+    <div class="kpi" style="--kc:var(--amber)"><div class="klbl">Índice Aprobación</div><div class="kval" id="k4">—</div><div class="ksub"><span class="dn" id="k4c">▼ — pts</span> vs mes ant.</div></div>
+    <div class="kpi" style="--kc:var(--green)"><div class="klbl">Menciones Sociales</div><div class="kval" id="k5">—</div><div class="ksub">en RRSS directas</div></div>
+    <div class="kpi" style="--kc:var(--red)"><div class="klbl">Riesgo Político</div><div class="kval" id="k6" style="font-size:15px">—</div><div class="ksub" id="k6s"><span style="color:var(--amber)">⚠</span> —</div></div>
+  </div>
+
+  <!-- ROW 1 -->
+  <div class="r1">
+    <div class="card">
+      <div class="ctitle">📊 Sentimiento Global</div>
+      <div class="scwrap">
+        <canvas id="sentChart" width="148" height="148"></canvas>
+        <div class="scenter"><div class="spct" id="sentPct">—</div><div class="slbl">Aprobación<br>efectiva</div></div>
+      </div>
+      <div class="srow"><div class="sname"><div class="sdot" style="background:#10b981"></div>Positivo</div><div class="snum" style="color:#10b981" id="sPos">—</div></div>
+      <div class="sbar"><div class="sfill" id="sf1" style="background:#10b981;width:0%"></div></div>
+      <div class="srow"><div class="sname"><div class="sdot" style="background:#ef4444"></div>Negativo</div><div class="snum" style="color:#ef4444" id="sNeg">—</div></div>
+      <div class="sbar"><div class="sfill" id="sf2" style="background:#ef4444;width:0%"></div></div>
+      <div class="srow"><div class="sname"><div class="sdot" style="background:#475569"></div>Neutro</div><div class="snum" style="color:#94a3b8" id="sNeu">—</div></div>
+      <div class="sbar"><div class="sfill" id="sf3" style="background:#475569;width:0%"></div></div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:6px">
+        <div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:2px">⚠ Zona de Riesgo</div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.4">Negativo supera 3× al positivo. Reforma Electoral domina la narrativa.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+        <div class="ctitle" style="margin:0">📈 Tendencia Diaria de Menciones</div>
+        <div class="tnotes">
+          <div class="tn"><div class="tnl" style="background:#3b82f6"></div>Total</div>
+          <div class="tn"><div class="tnl" style="background:#10b981"></div>Positivas</div>
+          <div class="tn"><div class="tnl" style="background:#ef4444;opacity:.7"></div>Negativas</div>
+          <div class="tn"><div class="tnl" style="background:#f59e0b;border-style:dashed"></div>Proyección</div>
+        </div>
+      </div>
+      <canvas id="trendChart" style="display:block;width:100%" height="180"></canvas>
+      <div style="margin-top:5px">
+        <span class="evtag" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber)">🔫 19 Feb — El Mencho</span>
+        <span class="evtag" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red)">⚡ 22 Feb — Pico negativo</span>
+        <span class="evtag" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:var(--blue)">📅 27 Feb — Récord 1,930</span>
+      </div>
+      <div class="ctitle" style="margin-top:14px;margin-bottom:6px">📡 Alcance Diario en Redes Sociales</div>
+      <canvas id="reachChart" style="display:block;width:100%" height="120"></canvas>
+      <div style="margin-top:4px;font-size:10px;color:var(--muted)">
+        Pico máximo: <b style="color:var(--cyan)">10.5M</b> el 26 Feb (Reforma Electoral viral) · Media del periodo: <b style="color:var(--dim)">1.4M</b>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">📡 Origen de Menciones</div>
+      <div id="platList"></div>
+      <div style="margin-top:12px;display:flex;justify-content:center"><canvas id="platChart" width="192" height="192"></canvas></div>
+    </div>
+  </div><!-- /r1 -->
+
+  <!-- ROW 2: MAPA -->
+  <div class="card r2">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <div class="ctitle" style="margin:0">🗺 Mapa de Calor Político — Aprobación por Estado · México</div>
+      <div class="map-legend">
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(16,185,129,.5);border:1px solid #10b981"></div>Alta aprobación &gt;55%</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(245,158,11,.5);border:1px solid #f59e0b"></div>Media 45-55%</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(239,68,68,.5);border:1px solid #ef4444"></div>Baja &lt;45%</div>
+      </div>
+    </div>
+    <div id="mapWrap" style="position:relative">
+      <div id="mapLeaflet"></div>
+    </div>
+  </div><!-- /r2 -->
+
+  <!-- ROW 3 -->
+  <div class="r3">
+    <div class="card">
+      <div class="ctitle">🔥 Temas más Discutidos</div>
+      <div id="topicsCloud"></div>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div class="ctitle">📊 Evolución del Sentimiento por Semana</div>
+      <canvas id="sentWeekChart" style="display:block;width:100%" height="130"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">📢 Demandas Ciudadanas</div>
+      <div id="demandsList"></div>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div class="ctitle">📅 Actividad por Día de la Semana</div>
+      <canvas id="dowChart" style="display:block;width:100%" height="120"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">🔮 Proyecciones — Próximos 7 días</div>
+      <div id="predList"></div>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div class="ctitle">⚡ Indicadores Clave</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px" id="miniStats"></div>
+    </div>
+  </div><!-- /r3 -->
+
+  <!-- ROW COMPARATIVO -->
+  <div class="card" style="margin-bottom:11px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <div class="ctitle" style="margin:0">⚔️ Comparativo de Candidatos — Panorama Electoral 2026</div>
+      <div style="font-size:10px;color:var(--muted)">Aprobación · Sentimiento · Share of Voice · Periodo: <span id="compPeriod">—</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px">
+      <div>
+        <div class="ctitle" style="margin-bottom:8px">📊 Índice de Aprobación por Candidato</div>
+        <canvas id="compBarChart" style="display:block;width:100%" height="200"></canvas>
+      </div>
+      <div>
+        <div class="ctitle" style="margin-bottom:8px">😊 Distribución de Sentimiento</div>
+        <canvas id="compSentChart" style="display:block;width:100%" height="200"></canvas>
+      </div>
+    </div>
+    <div id="compCards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px"></div>
+  </div><!-- /rComp -->
+
+  <!-- ROW 4 -->
+  <div class="r4">
+    <div class="card">
+      <div class="ctitle">🧠 Inteligencia Estratégica &amp; Recomendaciones Tácticas</div>
+      <div id="strategyList"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">📰 Feed de Menciones Recientes</div>
+      <div class="fscroll" id="feed"></div>
+    </div>
+  </div>
+
+  <!-- ROW 5 -->
+  <div class="r5">
+    <div class="card">
+      <div class="ctitle">📉 Ratio Negativo/Positivo</div>
+      <canvas id="ratioChart" style="display:block;width:100%" height="120"></canvas>
+      <div style="margin-top:6px;font-size:10px;color:var(--muted)">Pico: 5.1× el 22 Feb · Actual: 3.3×</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">💬 Distribución de Interacciones</div>
+      <div style="display:flex;justify-content:center;margin-bottom:6px">
+        <canvas id="engChart" width="150" height="150"></canvas>
+      </div>
+      <div id="engLegend" style="display:flex;flex-direction:column;gap:5px"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">🕐 Actividad por Hora del Día</div>
+      <canvas id="hourChart" style="display:block;width:100%" height="120"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle">📈 Velocidad de Viralización</div>
+      <canvas id="viralChart" style="display:block;width:100%" height="120"></canvas>
+      <div style="margin-top:6px;font-size:10px;color:var(--muted)">Máx viral: 26 Feb · Velocidad: +312% vs baseline</div>
+    </div>
+  </div>
+
+</div>
+
+<footer><b>Radar Político</b> · Inteligencia Electoral en Tiempo Real · <span id="ftPeriod">2 Feb – 4 Mar 2026</span> · <b>DEMO</b></footer>
+
+<!-- Chat Button -->
+<button id="chatBtn" title="Asistente Radar Político">🤖<div class="cbadge"></div></button>
+
+<!-- Chat Panel -->
+<div id="chatPanel">
+  <div id="chatHead">
+    <div class="chat-av">🤖</div>
+    <div class="chat-info">
+      <div class="chat-title">Asistente <span>Radar Político</span></div>
+      <div class="chat-sub">Análisis político en tiempo real</div>
+    </div>
+    <button id="chatClose">✕</button>
+  </div>
+  <div id="chatMsgs"></div>
+  <div id="chatSuggs">
+    <span class="csugg">¿Qué estados son de riesgo?</span>
+    <span class="csugg">Estrategia para el norte</span>
+    <span class="csugg">¿Qué pide la gente?</span>
+    <span class="csugg">¿Cómo usar TikTok?</span>
+  </div>
+  <div id="chatFoot">
+    <input id="chatInp" placeholder="Pregunta sobre los datos del monitor…" />
+    <button id="chatSend">↑</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* Global D – asignado después del fetch */
+var D;
+
+/* ════════ UTILS ════════ */
+function fmt(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toLocaleString('es-MX')}
+function ac(a){return a>=55?'#10b981':a>=45?'#f59e0b':'#ef4444'}
+function ab(a){return a>=55?'rgba(16,185,129,.22)':a>=45?'rgba(245,158,11,.22)':'rgba(239,68,68,.22)'}
+function abo(a){return a>=55?'rgba(16,185,129,.6)':a>=45?'rgba(245,158,11,.6)':'rgba(239,68,68,.6)'}
+
+/* Reloj */
+function tickClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('es-MX')}
+tickClock();setInterval(tickClock,1000);
+
+/* KPI counter */
+function counter(id,target,sfx){
+  var el=document.getElementById(id);if(!el)return;
+  var t0=Date.now(),dur=1600;
+  (function tick(){var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    el.textContent=fmt(Math.round(e*target))+(sfx||'');if(p<1)requestAnimationFrame(tick)})();
+}
+
+/* ════════ DONUT HELPER ════════ */
+function donut(id,segs,W,H){
+  var canvas=document.getElementById(id);if(!canvas||!canvas.getContext)return;
+  var ctx=canvas.getContext('2d');
+  var cx=W/2,cy=H/2,outerR=W*0.44,innerR=W*0.28;
+  var total=segs.reduce(function(s,d){return s+d.v},0);
+  var t0=Date.now(),dur=1100;
+  var CARD='#0d1626';
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,H);
+    var a=-Math.PI/2;
+    segs.forEach(function(sg){
+      var sw=(sg.v/total)*Math.PI*2*e;
+      ctx.beginPath();ctx.arc(cx,cy,outerR,a,a+sw);ctx.arc(cx,cy,innerR,a+sw,a,true);
+      ctx.closePath();ctx.fillStyle=sg.c;ctx.fill();
+      ctx.beginPath();ctx.moveTo(cx,cy);
+      ctx.lineTo(cx+Math.cos(a)*outerR*1.04,cy+Math.sin(a)*outerR*1.04);
+      ctx.strokeStyle=CARD;ctx.lineWidth=2;ctx.stroke();
+      a+=sw;
+    });
+    ctx.beginPath();ctx.arc(cx,cy,innerR,0,Math.PI*2);ctx.fillStyle=CARD;ctx.fill();
+    if(p<1)requestAnimationFrame(draw);
+  })();
+}
+
+/* ════════ LINE CHART HELPER ════════ */
+function lineChart(id,datasets,labels,H,opts){
+  var canvas=document.getElementById(id);if(!canvas||!canvas.getContext)return;
+  opts=opts||{};
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-30,300);
+  canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var pad={t:8,r:opts.r||40,b:28,l:opts.l||46};
+  var cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+  var N=labels.length;
+  var allV=[];datasets.forEach(function(ds){allV=allV.concat(ds.data)});
+  var maxV=opts.maxV||Math.max.apply(null,allV)||1;
+  var minV=opts.minV||0;
+  function xAt(i){return pad.l+(i/(N-1))*cW}
+  function yAt(v){return pad.t+cH-((v-minV)/(maxV-minV))*cH}
+  var t0=Date.now(),dur=1300;
+  (function draw(){
+    var prog=Math.min((Date.now()-t0)/dur,1),ease=1-Math.pow(1-prog,3);
+    var nP=Math.max(2,Math.floor(ease*(N-1)));
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(30,63,128,.25)';ctx.lineWidth=1;ctx.setLineDash([]);
+    for(var gi=0;gi<=4;gi++){
+      var gy=pad.t+(gi/4)*cH;
+      ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cW,gy);ctx.stroke();
+      var gv=((4-gi)/4)*(maxV-minV)+minV;
+      ctx.fillStyle='#64748b';ctx.font='10px system-ui';ctx.textAlign='right';
+      ctx.fillText(opts.fmtY?opts.fmtY(gv):fmt(gv),pad.l-4,gy+4);
+    }
+    var step=Math.max(1,Math.floor(N/8));
+    ctx.fillStyle='#64748b';ctx.font='10px system-ui';ctx.textAlign='center';
+    for(var xi=0;xi<N;xi+=step)ctx.fillText(labels[xi],xAt(xi),H-pad.b+13);
+    if(opts.eventIdx!=null&&opts.eventIdx<=nP){
+      var emX=xAt(opts.eventIdx);
+      ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(245,158,11,.4)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(emX,pad.t);ctx.lineTo(emX,pad.t+cH);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    datasets.forEach(function(ds){
+      var data=ds.data;
+      if(ds.fill){
+        var grad=ctx.createLinearGradient(0,pad.t,0,pad.t+cH);
+        grad.addColorStop(0,ds.color+'30');grad.addColorStop(1,ds.color+'02');
+        ctx.beginPath();
+        for(var i=0;i<=nP;i++){var x=xAt(i),y=yAt(data[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+        ctx.lineTo(xAt(nP),pad.t+cH);ctx.lineTo(xAt(0),pad.t+cH);ctx.closePath();
+        ctx.fillStyle=grad;ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.strokeStyle=ds.color;ctx.lineWidth=ds.lw||2;
+      ctx.setLineDash(ds.dash||[]);
+      for(var i=0;i<=nP;i++){var x=xAt(i),y=yAt(data[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+      ctx.stroke();ctx.setLineDash([]);
+    });
+    if(opts.proj&&prog===1){
+      var projData=opts.proj;
+      ctx.beginPath();ctx.strokeStyle='rgba(245,158,11,.7)';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+      ctx.moveTo(xAt(N-1),yAt(D.daily[N-1].m));
+      projData.forEach(function(v,i){
+        var fx=pad.l+cW+((i+1)/(projData.length+1))*cW*0.25;
+        ctx.lineTo(fx,yAt(v));
+      });
+      ctx.stroke();ctx.setLineDash([]);
+    }
+    if(prog<1)requestAnimationFrame(draw);
+  })();
+}
+
+/* ════════ MAPA REAL DE MÉXICO — Leaflet ════════ */
+(function(){
+  var map=L.map('mapLeaflet',{center:[23.5,-102],zoom:5,zoomControl:true,scrollWheelZoom:false,attributionControl:true});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+    subdomains:'abcd',maxZoom:18
+  }).addTo(map);
+
+  /* Esperamos a que D esté disponible para pintar los marcadores */
+  var tries=0;
+  var interval=setInterval(function(){
+    tries++;
+    if(typeof D!=='undefined'&&D&&D.states){
+      clearInterval(interval);
+      D.states.forEach(function(s){
+        var col=ac(s.a),boCol=abo(s.a);
+        var r=Math.max(18,Math.min(50,s.men/160));
+        var circle=L.circleMarker([s.lat,s.lng],{radius:r,fillColor:col,color:boCol,weight:1.5,opacity:.9,fillOpacity:.28}).addTo(map);
+        var sent=s.a>=55?'Favorable':s.a>=45?'Neutral':'Desfavorable';
+        var riesgo=s.a<40?'🔴 Alto':s.a<50?'🟡 Medio':'🟢 Bajo';
+        circle.bindPopup(
+          '<div style="font-family:system-ui;min-width:190px">'
+          +'<div style="font-size:13px;font-weight:800;margin-bottom:8px;color:'+col+'">'+s.name+'</div>'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span style="color:#94a3b8">Aprobación</span><span style="font-weight:700;color:'+col+'">'+s.a+'%</span></div>'
+          +'<div style="height:4px;background:#1a2f50;border-radius:2px;margin-bottom:8px;overflow:hidden"><div style="height:100%;width:'+s.a+'%;background:'+col+'"></div></div>'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:#94a3b8">Menciones</span><span style="font-weight:700;color:#e2e8f0">'+fmt(s.men)+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:#94a3b8">Sentimiento</span><span style="font-weight:700;color:'+col+'">'+sent+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#94a3b8">Riesgo</span><span style="font-weight:700">'+riesgo+'</span></div>'
+          +'</div>',{maxWidth:220}
+        );
+        L.marker([s.lat,s.lng],{
+          icon:L.divIcon({className:'',
+            html:'<div style="font-size:9px;font-weight:800;color:'+col+';text-shadow:0 1px 4px #000,0 0 8px #000;text-align:center;line-height:1.3;pointer-events:none">'+s.id+'<br><span style="font-size:10px">'+s.a+'%</span></div>',
+            iconSize:[44,26],iconAnchor:[22,13]})
+        }).addTo(map);
+      });
+    } else if(tries>60){clearInterval(interval);}
+  },200);
+})();
+
+/* ════════ CHARTS INDEPENDIENTES (no usan D) ════════ */
+
+/* Sentimiento por semana */
+(function(){
+  var weeks=[
+    {lbl:'Sem 1\n(2-8 Feb)',pos:268,neg:1027,neu:3649},
+    {lbl:'Sem 2\n(9-15 Feb)',pos:220,neg:898,neu:3471},
+    {lbl:'Sem 3\n(16-22 Feb)',pos:334,neg:1576,neu:6671},
+    {lbl:'Sem 4\n(23 Feb-3 Mar)',pos:667,neg:1826,neu:6437}
+  ];
+  var canvas=document.getElementById('sentWeekChart');if(!canvas||!canvas.getContext)return;
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-28,200);canvas.width=W;canvas.height=130;
+  var ctx=canvas.getContext('2d');
+  var maxT=Math.max.apply(null,weeks.map(function(w){return w.pos+w.neg+w.neu}));
+  var bW=(W-60)/(weeks.length)-6;
+  var pad={t:6,l:10,b:30,r:10};var cH=130-pad.t-pad.b;
+  var t0=Date.now(),dur=1200;
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,130);
+    weeks.forEach(function(w,i){
+      var x=pad.l+i*(bW+6)+30;var y=pad.t+cH;
+      ctx.fillStyle='#37415166';ctx.fillRect(x,y-(w.neu/maxT)*cH*e,bW,(w.neu/maxT)*cH*e);
+      ctx.fillStyle='#ef4444aa';ctx.fillRect(x,y-(w.neu/maxT)*cH*e-(w.neg/maxT)*cH*e,bW,(w.neg/maxT)*cH*e);
+      ctx.fillStyle='#10b981cc';ctx.fillRect(x,y-(w.neu/maxT)*cH*e-(w.neg/maxT)*cH*e-(w.pos/maxT)*cH*e,bW,(w.pos/maxT)*cH*e);
+      ctx.fillStyle='#64748b';ctx.font='9px system-ui';ctx.textAlign='center';
+      ctx.fillText(w.lbl.split('\n')[0],x+bW/2,130-pad.b+12);
+      ctx.fillText(w.lbl.split('\n')[1],x+bW/2,130-pad.b+22);
+    });
+    var leg=[['#10b981','Pos'],['#ef4444','Neg'],['#475569','Neu']];
+    leg.forEach(function(l,i){ctx.fillStyle=l[0];ctx.fillRect(4,pad.t+i*16,8,8);ctx.fillStyle='#94a3b8';ctx.font='9px system-ui';ctx.textAlign='left';ctx.fillText(l[1],14,pad.t+i*16+8);});
+    if(p<1)requestAnimationFrame(draw);
+  })();
+})();
+
+/* Actividad por día de la semana */
+(function(){
+  var dow=[{d:'Lun',m:1650,c:'#3b82f6'},{d:'Mar',m:1820,c:'#3b82f6'},{d:'Mié',m:1750,c:'#3b82f6'},{d:'Jue',m:1680,c:'#3b82f6'},{d:'Vie',m:1590,c:'#3b82f6'},{d:'Sáb',m:1280,c:'#60a5fa'},{d:'Dom',m:1100,c:'#60a5fa'}];
+  var canvas=document.getElementById('dowChart');if(!canvas||!canvas.getContext)return;
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-28,200);canvas.width=W;canvas.height=120;
+  var ctx=canvas.getContext('2d');
+  var maxV=Math.max.apply(null,dow.map(function(d){return d.m}));
+  var bW=(W-20)/(dow.length)-4;var cH=80;var t0=Date.now(),dur=1000;
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,120);
+    dow.forEach(function(d,i){
+      var x=10+i*(bW+4);var h=(d.m/maxV)*cH*e;
+      ctx.fillStyle=d.c+'99';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,cH-h+10,bW,h,3);else ctx.rect(x,cH-h+10,bW,h);ctx.fill();
+      ctx.fillStyle='#94a3b8';ctx.font='9px system-ui';ctx.textAlign='center';ctx.fillText(d.d,x+bW/2,115);
+      if(p===1){ctx.fillStyle=d.c;ctx.font='bold 9px system-ui';ctx.fillText(fmt(d.m),x+bW/2,cH-h+8);}
+    });
+    if(p<1)requestAnimationFrame(draw);
+  })();
+})();
+
+/* Hora del día */
+(function(){
+  var hours=[{h:'6am',v:180},{h:'7am',v:320},{h:'8am',v:580},{h:'9am',v:720},{h:'10am',v:650},{h:'11am',v:580},{h:'12pm',v:540},{h:'1pm',v:490},{h:'2pm',v:460},{h:'3pm',v:430},{h:'4pm',v:470},{h:'5pm',v:520},{h:'6pm',v:610},{h:'7pm',v:740},{h:'8pm',v:780},{h:'9pm',v:650},{h:'10pm',v:480},{h:'11pm',v:280}];
+  var canvas=document.getElementById('hourChart');if(!canvas||!canvas.getContext)return;
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-28,200);canvas.width=W;canvas.height=120;
+  var ctx=canvas.getContext('2d');
+  var maxV=Math.max.apply(null,hours.map(function(h){return h.v}));
+  var bW=(W-20)/hours.length-1;var cH=85;var t0=Date.now(),dur=1000;
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,120);
+    hours.forEach(function(h,i){
+      var x=10+i*(bW+1);var hv=(h.v/maxV)*cH*e;
+      var isP=h.h==='8am'||h.h==='8pm'||h.h==='7pm';
+      ctx.fillStyle=(isP?'#f59e0b':'#3b82f6')+'88';
+      ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,cH-hv+10,bW,hv,2);else ctx.rect(x,cH-hv+10,bW,hv);ctx.fill();
+      if(i%3===0){ctx.fillStyle='#64748b';ctx.font='8px system-ui';ctx.textAlign='center';ctx.fillText(h.h,x+bW/2,115);}
+    });
+    if(p<1)requestAnimationFrame(draw);
+  })();
+})();
+
+/* ════════ RENDER DASHBOARD (necesita D) ════════ */
+function renderDashboard(D){
+
+  /* Header dinámico */
+  document.getElementById('hdrName').textContent = D.meta.candidate;
+  document.getElementById('hdrMeta').textContent = D.meta.role;
+  document.getElementById('hdrPeriod').textContent = D.meta.period;
+  document.getElementById('ftPeriod').textContent = D.meta.period;
+
+  /* KPI counters */
+  counter('k1', D.kpis.totalMentions);
+  counter('k2', D.kpis.reach);
+  counter('k3', D.kpis.interactions);
+  counter('k4', D.kpis.approvalIndex, '%');
+  counter('k5', D.kpis.directMentions);
+  document.getElementById('k1c').textContent = '▲ ' + D.kpis.reachChange + '%';
+  document.getElementById('k3c').textContent = '▲ ' + D.kpis.engagementChange + '%';
+  var apChg = D.kpis.approvalChange;
+  document.getElementById('k4c').textContent = (apChg > 0 ? '▲' : '▼') + ' ' + Math.abs(apChg) + ' pts';
+  document.getElementById('k4c').className = apChg >= 0 ? 'up' : 'dn';
+  document.getElementById('k6').textContent = D.kpis.riskLevel;
+  document.getElementById('k6s').innerHTML = '<span style="color:var(--amber)">⚠</span> ' + D.kpis.riskDesc;
+
+  /* Sentimiento */
+  var s = D.kpis.sentiment;
+  document.getElementById('sentPct').textContent = D.kpis.approvalIndex + '%';
+  document.getElementById('sPos').textContent = s.positive + '%';
+  document.getElementById('sNeg').textContent = s.negative + '%';
+  document.getElementById('sNeu').textContent = s.neutral + '%';
+  setTimeout(function(){
+    document.getElementById('sf1').style.width = s.positive + '%';
+    document.getElementById('sf2').style.width = s.negative + '%';
+    document.getElementById('sf3').style.width = s.neutral + '%';
+  }, 300);
+
+  /* Plataformas */
+  var ph='';
+  D.platforms.forEach(function(p){
+    ph+='<div class="pi"><div class="pico" style="background:'+p.c+'22">'+p.e+'</div>'
+      +'<div class="pname">'+p.n+'</div>'
+      +'<div class="pbg"><div class="pfill" style="background:'+p.c+';width:'+p.pct+'%"></div></div>'
+      +'<div class="ppct" style="color:'+p.c+'">'+p.pct+'%</div></div>';
+  });
+  document.getElementById('platList').innerHTML=ph;
+
+  /* Temas */
+  var tst={pos:{bg:'rgba(16,185,129,.1)',bo:'rgba(16,185,129,.3)',c:'#10b981'},neg:{bg:'rgba(239,68,68,.1)',bo:'rgba(239,68,68,.3)',c:'#ef4444'},neu:{bg:'rgba(100,116,139,.1)',bo:'rgba(100,116,139,.3)',c:'#94a3b8'}};
+  var th='';
+  D.topics.forEach(function(t){var s=tst[t.s];th+='<div class="tc" style="background:'+s.bg+';border-color:'+s.bo+';color:'+s.c+';font-size:'+t.sz+'px">'+t.t+' <span style="opacity:.4;font-size:10px">'+fmt(t.c)+'</span></div>';});
+  document.getElementById('topicsCloud').innerHTML=th;
+
+  /* Demandas */
+  var dh='';
+  D.demands.forEach(function(d){dh+='<div class="dr"><div class="dh"><div class="dtxt">'+d.i+' '+d.t+'</div><div class="dpct">'+d.p+'%</div></div><div class="dbg"><div class="dbar" style="width:'+d.p+'%"></div></div></div>';});
+  document.getElementById('demandsList').innerHTML=dh;
+
+  /* Predicciones (regresión lineal simple) */
+  var lastN=D.daily.slice(-10).map(function(d,i){return{x:i,m:d.m,p:d.p,n:d.n}});
+  function linReg(vals){
+    var n=vals.length,sx=0,sy=0,sxy=0,sxx=0;
+    vals.forEach(function(v,i){sx+=i;sy+=v;sxy+=i*v;sxx+=i*i});
+    var sl=(n*sxy-sx*sy)/(n*sxx-sx*sx);
+    var ic=(sy-sl*sx)/n;
+    return function(x){return Math.max(0,Math.round(sl*x+ic))};
+  }
+  var predM=linReg(lastN.map(function(d){return d.m}));
+  var predP=linReg(lastN.map(function(d){return d.p}));
+  var predN=linReg(lastN.map(function(d){return d.n}));
+  var baseX=lastN.length;
+  var nextMentions=predM(baseX+3);
+  var nextPos=predP(baseX+3);
+  var nextNeg=predN(baseX+3);
+  var trend=(nextMentions>D.daily[D.daily.length-1].m?'▲':'▼');
+  var preds=[
+    {i:'📈',c:'var(--blue)',  t:'Menciones proyectadas',    v:fmt(nextMentions),sub:'media próximos 7 días',trend:trend},
+    {i:'😊',c:'var(--green)', t:'Menciones positivas est.', v:fmt(nextPos),      sub:'tendencia al alza si hay logros',trend:'▲'},
+    {i:'📉',c:'var(--red)',   t:'Menciones negativas est.', v:fmt(nextNeg),      sub:'persistirán si no hay acciones',trend:'▼'},
+    {i:'📊',c:'var(--amber)', t:'Índice aprobación est.',   v:'18-23%',          sub:'rango si reforma sigue igual',trend:'→'},
+    {i:'📡',c:'var(--purple)',t:'Alcance estimado (RRSS)',   v:'1.8M',            sub:'por día en redes sociales',trend:'▼'},
+    {i:'⚠', c:'var(--red)',   t:'Riesgo próxima semana',    v:'ALTO',            sub:'si no hay comunicación ofensiva',trend:''}
+  ];
+  var prh='';
+  preds.forEach(function(p){prh+='<div class="pred-item"><div class="pred-ico">'+p.i+'</div><div><div class="pred-title" style="color:'+p.c+'">'+p.t+'</div><div class="pred-val" style="color:'+p.c+'">'+p.trend+' '+p.v+'</div><div class="pred-sub">'+p.sub+'</div></div></div>';});
+  document.getElementById('predList').innerHTML=prh;
+
+  /* Mini stats */
+  var totalM=D.daily.reduce(function(s,d){return s+d.m},0);
+  var totalP=D.daily.reduce(function(s,d){return s+d.p},0);
+  var totalN=D.daily.reduce(function(s,d){return s+d.n},0);
+  var avgM=Math.round(totalM/D.daily.length);
+  var maxM=Math.max.apply(null,D.daily.map(function(d){return d.m}));
+  var ratioPN=(totalN/totalP).toFixed(1);
+  var bestDay=D.daily.reduce(function(a,b){return b.p>a.p?b:a});
+  var miniS=[
+    {v:fmt(avgM),      l:'Media diaria menciones',c:'var(--blue)'},
+    {v:fmt(maxM),      l:'Pico máximo (27 Feb)',   c:'var(--cyan)'},
+    {v:ratioPN+'×',    l:'Ratio neg/pos',           c:'var(--red)'},
+    {v:fmt(totalP),    l:'Total positivas',         c:'var(--green)'},
+    {v:fmt(totalN),    l:'Total negativas',         c:'var(--red)'},
+    {v:bestDay.d,      l:'Mejor día (positivas)',   c:'var(--amber)'},
+    {v:fmt(D.engagement.likes),  l:'Likes sociales',      c:'var(--purple)'},
+    {v:fmt(D.kpis.interactions), l:'Interacciones totales',c:'var(--blue)'}
+  ];
+  var msh='';
+  miniS.forEach(function(s){msh+='<div class="mstat"><div class="mstat-val" style="color:'+s.c+'">'+s.v+'</div><div class="mstat-lbl">'+s.l+'</div></div>';});
+  document.getElementById('miniStats').innerHTML=msh;
+
+  /* Estrategia */
+  var sh='';
+  D.strategy.forEach(function(a){sh+='<div class="ai" style="--ac:'+a.c+'"><div class="aico">'+a.i+'</div><div><div class="atitle" style="color:'+a.c+'">'+a.t+'</div><div class="adesc">'+a.d+'</div></div></div>';});
+  document.getElementById('strategyList').innerHTML=sh;
+
+  /* Feed */
+  var scls={1:'sp','-1':'sn',0:'su'};var slbl={1:'Positivo','-1':'Negativo',0:'Neutro'};
+  var fh='';
+  D.mentions.forEach(function(m){
+    var cc=m.s===1?'#10b981':m.s===-1?'#ef4444':'#64748b';
+    fh+='<div class="mi"><div class="mtop"><div class="msrc"><div class="mdot" style="background:'+cc+'"></div>'+m.src+' <span style="color:var(--muted);font-weight:400">'+m.dom+'</span></div><div style="display:flex;align-items:center;gap:4px"><span class="sb '+(scls[m.s]||'su')+'">'+(slbl[m.s]||'Neutro')+'</span><span class="mdate">'+m.date+'</span></div></div><div class="mbody">'+m.txt+'</div></div>';
+  });
+  document.getElementById('feed').innerHTML=fh;
+
+  /* ════════ CHARTS CON D ════════ */
+  var labels=D.daily.map(function(d){return d.d});
+
+  donut('sentChart',[{v:s.positive,c:'#10b981bb'},{v:s.negative,c:'#ef4444bb'},{v:s.neutral,c:'#374151aa'}],148,148);
+  donut('platChart',D.platforms.map(function(p){return{v:p.pct,c:p.c+'bb'}}),192,192);
+
+  /* Engagement donut (reducido) */
+  var engSegs=[
+    {v:D.engagement.likes,   c:'#ef4444bb', l:'Likes / Reacciones'},
+    {v:D.engagement.comments,c:'#3b82f6bb', l:'Comentarios'},
+    {v:D.engagement.shares,  c:'#10b981bb', l:'Compartidos'}
+  ];
+  donut('engChart',engSegs,150,150);
+  var el='';
+  engSegs.forEach(function(sg){
+    el+='<div style="display:flex;align-items:center;gap:6px;font-size:10px">'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:'+sg.c.slice(0,7)+'"></div>'
+      +'<span style="color:var(--dim);flex:1">'+sg.l+'</span>'
+      +'<span style="font-weight:700">'+fmt(sg.v)+'</span>'
+      +'</div>';
+  });
+  document.getElementById('engLegend').innerHTML=el;
+
+  /* Trend chart */
+  var projVals=[];
+  for(var pi=1;pi<=5;pi++)projVals.push(predM(D.daily.length-10+pi));
+  lineChart('trendChart',[
+    {data:D.daily.map(function(d){return d.m}),color:'#3b82f6',lw:2,fill:true},
+    {data:D.daily.map(function(d){return d.p}),color:'#10b981',lw:1.5},
+    {data:D.daily.map(function(d){return d.n}),color:'#ef4444',lw:1.5,dash:[4,3]}
+  ],labels,180,{eventIdx:17,proj:projVals});
+
+  /* Reach chart */
+  (function(){
+    var canvas=document.getElementById('reachChart');if(!canvas||!canvas.getContext)return;
+    var parent=canvas.parentElement;
+    var W=Math.max(parent.offsetWidth-30,300);
+    canvas.width=W;canvas.height=120;
+    var ctx=canvas.getContext('2d');
+    var reachData=D.daily.map(function(d){return d.r});
+    var maxR=Math.max.apply(null,reachData);
+    var N=D.daily.length;
+    var pad={t:6,r:10,b:22,l:46};
+    var cW=W-pad.l-pad.r,cH=120-pad.t-pad.b;
+    var bW=Math.max(2,(cW/N)-1);
+    var t0=Date.now(),dur=1100;
+    (function draw(){
+      var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+      ctx.clearRect(0,0,W,120);
+      ctx.strokeStyle='rgba(30,63,128,.2)';ctx.lineWidth=1;
+      for(var gi=0;gi<=3;gi++){var gy=pad.t+(gi/3)*cH;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cW,gy);ctx.stroke();ctx.fillStyle='#64748b';ctx.font='9px system-ui';ctx.textAlign='right';ctx.fillText(fmt(((3-gi)/3)*maxR),pad.l-4,gy+4);}
+      var step=Math.max(1,Math.floor(N/8));ctx.fillStyle='#64748b';ctx.font='9px system-ui';ctx.textAlign='center';
+      for(var xi=0;xi<N;xi+=step)ctx.fillText(labels[xi],pad.l+(xi/(N-1))*cW,120-pad.b+12);
+      reachData.forEach(function(v,i){
+        var x=pad.l+(i/(N-1))*cW-bW/2;var h=(v/maxR)*cH*e;var y=pad.t+cH-h;
+        var grad=ctx.createLinearGradient(0,y,0,y+h);
+        var bc=v>1000000?'#06b6d4':v>100000?'#3b82f6':'#1e4080';
+        grad.addColorStop(0,bc+'cc');grad.addColorStop(1,bc+'44');
+        ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,bW,h,2):ctx.rect(x,y,bW,h);ctx.fill();
+      });
+      if(p<1)requestAnimationFrame(draw);
+    })();
+  })();
+
+  /* Ratio chart */
+  lineChart('ratioChart',[
+    {data:D.daily.map(function(d){return d.p>0?+(d.n/d.p).toFixed(2):0}),color:'#ef4444',lw:2,fill:true}
+  ],labels,120,{fmtY:function(v){return v.toFixed(1)+'×'},maxV:6,l:36,r:10});
+
+  /* Viral chart */
+  lineChart('viralChart',[
+    {data:D.daily.map(function(d,i){return i===0?1:+(d.r/D.daily[0].r).toFixed(2)}),color:'#06b6d4',lw:2,fill:true}
+  ],labels,120,{fmtY:function(v){return v.toFixed(0)+'×'},maxV:220,l:36,r:10});
+
+  /* ════════ COMPARATIVO DE CANDIDATOS ════════ */
+  if(!D.competitors||!D.competitors.length)return;
+  var comps=D.competitors;
+  document.getElementById('compPeriod').textContent=D.meta.period;
+
+  /* Tarjetas por candidato */
+  var totalMen=comps.reduce(function(s,c){return s+c.mentions},0);
+  var ch='';
+  comps.forEach(function(c){
+    var sov=Math.round(c.mentions/totalMen*100);
+    var isMain=(c.name===D.meta.candidate);
+    ch+='<div class="comp-card" style="border-color:'+(isMain?c.color:'var(--border)')+';">'
+      +'<div class="comp-name" style="color:'+c.color+'">'+(isMain?'★ ':'')+c.name+'</div>'
+      +'<div class="comp-party">'+c.party+' · '+c.role+'</div>'
+      +'<div class="comp-metric"><span>Aprobación</span><span style="color:'+c.color+';font-weight:700">'+c.approval+'%</span></div>'
+      +'<div class="comp-bar"><div class="comp-fill" style="width:'+c.approval+'%;background:'+c.color+'"></div></div>'
+      +'<div class="comp-metric"><span>Positivo</span><span style="color:#10b981;font-weight:700">'+c.positive+'%</span></div>'
+      +'<div class="comp-metric"><span>Negativo</span><span style="color:#ef4444;font-weight:700">'+c.negative+'%</span></div>'
+      +'<div class="comp-metric"><span>Share of Voice</span><span style="font-weight:700">'+sov+'%</span></div>'
+      +'<div class="comp-metric"><span>Menciones</span><span style="font-weight:700">'+fmt(c.mentions)+'</span></div>'
+      +'<div style="font-size:10px;margin-top:4px;color:'+(c.trendWeek>=0?'#10b981':'#ef4444')+'">'
+      +(c.trendWeek>=0?'▲ +':'▼ ')+c.trendWeek+'% esta semana</div>'
+      +'</div>';
+  });
+  document.getElementById('compCards').innerHTML=ch;
+
+  /* Gráfica de barras horizontales — Aprobación */
+  (function(){
+    var canvas=document.getElementById('compBarChart');if(!canvas||!canvas.getContext)return;
+    var parent=canvas.parentElement;
+    var W=Math.max(parent.offsetWidth-20,260);
+    canvas.width=W;canvas.height=200;
+    var ctx=canvas.getContext('2d');
+    var pad={t:10,r:50,b:10,l:10};
+    var rowH=Math.floor((200-pad.t-pad.b)/comps.length);
+    var maxApproval=Math.max.apply(null,comps.map(function(c){return c.approval}))*1.4;
+    var t0=Date.now(),dur=1200;
+    (function draw(){
+      var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+      ctx.clearRect(0,0,W,200);
+      comps.forEach(function(c,i){
+        var y=pad.t+i*rowH;
+        var bH=rowH*0.42;
+        var bY=y+(rowH-bH)/2;
+        var bW=(c.approval/maxApproval)*(W-pad.l-pad.r-80)*e;
+        /* barra */
+        var grad=ctx.createLinearGradient(pad.l+80,0,pad.l+80+bW,0);
+        grad.addColorStop(0,c.color+'dd');grad.addColorStop(1,c.color+'55');
+        ctx.fillStyle=grad;
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(pad.l+80,bY,Math.max(bW,2),bH,3);else ctx.rect(pad.l+80,bY,Math.max(bW,2),bH);
+        ctx.fill();
+        /* nombre */
+        ctx.fillStyle=c.color;ctx.font='bold 10px system-ui';ctx.textAlign='right';
+        var shortName=c.name.split(' ').slice(0,2).join(' ');
+        ctx.fillText(shortName,pad.l+76,bY+bH/2+4);
+        /* valor */
+        if(p>0.5){
+          ctx.fillStyle=c.color;ctx.font='bold 11px system-ui';ctx.textAlign='left';
+          ctx.fillText(c.approval+'%',pad.l+80+bW+5,bY+bH/2+4);
+        }
+      });
+      if(p<1)requestAnimationFrame(draw);
+    })();
+  })();
+
+  /* Gráfica de sentimiento apilado */
+  (function(){
+    var canvas=document.getElementById('compSentChart');if(!canvas||!canvas.getContext)return;
+    var parent=canvas.parentElement;
+    var W=Math.max(parent.offsetWidth-20,260);
+    canvas.width=W;canvas.height=200;
+    var ctx=canvas.getContext('2d');
+    var pad={t:10,r:20,b:24,l:10};
+    var rowH=Math.floor((200-pad.t-pad.b)/comps.length);
+    var barW=(W-pad.l-pad.r)/comps.length-8;
+    var t0=Date.now(),dur=1200;
+    (function draw(){
+      var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+      ctx.clearRect(0,0,W,200);
+      var cH=200-pad.t-pad.b;
+      comps.forEach(function(c,i){
+        var x=pad.l+i*(barW+8);
+        var negH=cH*(c.negative/100)*e;
+        var neuH=cH*(c.neutral/100)*e;
+        var posH=cH*(c.positive/100)*e;
+        var baseY=pad.t+cH;
+        /* negativo (bottom) */
+        ctx.fillStyle='#ef444488';ctx.fillRect(x,baseY-negH,barW,negH);
+        /* neutro */
+        ctx.fillStyle='#47556988';ctx.fillRect(x,baseY-negH-neuH,barW,neuH);
+        /* positivo (top) */
+        ctx.fillStyle='#10b98188';ctx.fillRect(x,baseY-negH-neuH-posH,barW,posH);
+        /* label */
+        ctx.fillStyle=c.color;ctx.font='bold 9px system-ui';ctx.textAlign='center';
+        ctx.fillText(c.name.split(' ').slice(-1)[0],x+barW/2,200-pad.b+13);
+        /* valores si animación completa */
+        if(p>0.8){
+          ctx.fillStyle='#10b981';ctx.font='bold 9px system-ui';
+          ctx.fillText(c.positive+'%',x+barW/2,baseY-negH-neuH-posH-3);
+        }
+      });
+      /* leyenda */
+      var leg=[['#ef4444','Neg'],['#475569','Neu'],['#10b981','Pos']];
+      leg.forEach(function(l,i){
+        ctx.fillStyle=l[0];ctx.fillRect(pad.l+i*50,pad.t-2,8,8);
+        ctx.fillStyle='#94a3b8';ctx.font='9px system-ui';ctx.textAlign='left';
+        ctx.fillText(l[1],pad.l+i*50+10,pad.t+6);
+      });
+      if(p<1)requestAnimationFrame(draw);
+    })();
+  })();
+}
+
+/* ════════ CARGAR DATOS DE LA API ════════ */
+fetch('/api/data')
+  .then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(data){
+    D = data;
+    document.getElementById('loadingOverlay').style.display='none';
+    renderDashboard(data);
+  })
+  .catch(function(e){
+    console.error('Error al cargar datos:', e);
+    var ov=document.getElementById('loadingOverlay');
+    ov.innerHTML='<div style="color:#ef4444;font-size:14px;font-weight:700">⚠ Error al cargar datos</div>'
+      +'<div style="color:#64748b;font-size:12px;margin-top:6px">Verifica que el servidor backend esté corriendo:<br><code style="color:#06b6d4">cd backend && npm install && npm start</code></div>';
+  });
+
+/* ════════ MARKDOWN PARSER (para respuestas del chat) ════════ */
+function parseMarkdown(text){
+  var s=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  /* Headers */
+  s=s.replace(/^### (.+)$/gm,'<div class="mh3">$1</div>');
+  s=s.replace(/^## (.+)$/gm,'<div class="mh2">$1</div>');
+  /* Bold / italic */
+  s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
+  /* Numbered lists */
+  s=s.replace(/^(\d+)\. (.+)$/gm,'<div class="mli"><span class="mlin">$1.</span><span>$2</span></div>');
+  /* Bullet lists */
+  s=s.replace(/^[•\-] (.+)$/gm,'<div class="mli"><span class="mlib">•</span><span>$1</span></div>');
+  /* Line breaks (skip after block divs) */
+  s=s.replace(/\n(?!<div)/g,'<br>');
+  return s;
+}
+
+/* ════════ CHAT WIDGET ════════ */
+(function(){
+  var btn      = document.getElementById('chatBtn');
+  var panel    = document.getElementById('chatPanel');
+  var msgs     = document.getElementById('chatMsgs');
+  var inp      = document.getElementById('chatInp');
+  var sendBtn  = document.getElementById('chatSend');
+  var closeBtn = document.getElementById('chatClose');
+  var suggs    = document.getElementById('chatSuggs');
+  var history  = [];
+  var isOpen   = false;
+  var greeted  = false;
+
+  function togglePanel(){
+    isOpen = !isOpen;
+    panel.classList.toggle('open', isOpen);
+    if(isOpen){
+      btn.querySelector('.cbadge').style.display='none';
+      if(!greeted){
+        greeted=true;
+        addMsg('bot','¡Hola! Soy el asistente de Radar Político 🤖\n\nAnálizo en tiempo real los datos del monitor de campaña. Puedo ayudarte con:\n• Aprobación y sentimiento por estado\n• Estrategias tácticas por región o tema\n• Interpretación de tendencias y riesgos\n• Recomendaciones de contenido y timing\n\n¿En qué te puedo ayudar?');
+      }
+      setTimeout(function(){inp.focus();},300);
+    }
+  }
+
+  function addMsg(role,text){
+    var div=document.createElement('div');
+    div.className='cmsg '+role;
+    if(role==='bot'){div.innerHTML=parseMarkdown(text);}
+    else{div.textContent=text;}
+    msgs.appendChild(div);
+    msgs.scrollTop=msgs.scrollHeight;
+    return div;
+  }
+
+  async function sendMsg(){
+    var text=inp.value.trim();
+    if(!text||sendBtn.disabled)return;
+    inp.value='';
+    suggs.style.display='none';
+    sendBtn.disabled=true;
+    addMsg('user',text);
+    history.push({role:'user',content:text});
+    var typing=addMsg('bot','Analizando datos…');
+    typing.classList.add('typing');
+    try{
+      var res=await fetch('/api/chat',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({messages:history})
+      });
+      var data=await res.json();
+      typing.remove();
+      if(data.reply){
+        addMsg('bot',data.reply);
+        history.push({role:'assistant',content:data.reply});
+      } else {
+        addMsg('bot','⚠ '+( data.error||'Error desconocido'));
+      }
+    } catch(e){
+      typing.remove();
+      addMsg('bot','⚠ No se pudo conectar con el servidor.\nVerifica que el backend esté corriendo en http://localhost:3000');
+    }
+    sendBtn.disabled=false;
+    inp.focus();
+  }
+
+  btn.addEventListener('click', togglePanel);
+  closeBtn.addEventListener('click', function(){isOpen=true;togglePanel();});
+  sendBtn.addEventListener('click', sendMsg);
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}});
+
+  /* Sugerencias rápidas */
+  suggs.querySelectorAll('.csugg').forEach(function(s){
+    s.addEventListener('click',function(){
+      inp.value=s.textContent;
+      sendMsg();
+    });
+  });
+})();
+</script>
+</body>
+</html>

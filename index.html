@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PolitIQ — Monitor Electoral</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060b18;--card:#0d1626;--card2:#0f1c34;--border:#1a2f50;--bhi:#1e4080;
+  --blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;
+  --text:#e2e8f0;--dim:#94a3b8;--muted:#64748b}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+.hdr{background:rgba(6,11,24,.96);border-bottom:1px solid var(--border);padding:9px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(16px)}
+.logo{font-size:19px;font-weight:800;color:#fff}.logo span{color:var(--cyan)}.logo em{font-size:9px;font-weight:400;color:var(--muted);letter-spacing:1px;font-style:normal;margin-left:3px}
+.sep{width:1px;height:30px;background:var(--border);margin:0 14px}
+.av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}
+.cname{font-weight:700;font-size:14px}.cmeta{font-size:10px;color:var(--muted)}
+.hright{display:flex;align-items:center;gap:10px}
+.ptag{font-size:10px;color:var(--muted);background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:3px 9px}
+.live{display:flex;align-items:center;gap:5px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:18px;padding:3px 11px;font-size:10px;font-weight:800;color:#ef4444;text-transform:uppercase;letter-spacing:1px}
+.ldot{width:6px;height:6px;border-radius:50%;background:#ef4444;animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+#clock{font-size:12px;color:var(--dim);min-width:60px;text-align:right;font-variant-numeric:tabular-nums}
+.wrap{padding:14px 18px;max-width:1580px;margin:0 auto}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--blue))}
+.klbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+.kval{font-size:22px;font-weight:800;color:var(--kc,var(--blue));line-height:1;margin-bottom:3px}
+.ksub{font-size:10px;color:var(--muted)}.up{color:var(--green)}.dn{color:var(--red)}
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:14px}
+.ctitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+/* ROWS */
+.r1{display:grid;grid-template-columns:220px 1fr 220px;gap:11px;margin-bottom:11px}
+.r2{margin-bottom:11px}
+.r3{display:grid;grid-template-columns:1fr 1fr 320px;gap:11px;margin-bottom:11px}
+.r4{display:grid;grid-template-columns:1fr 340px;gap:11px;margin-bottom:11px}
+.r5{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:11px}
+/* SENTIMENT */
+.scwrap{position:relative;width:148px;height:148px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+#sentChart{position:absolute;top:0;left:0}
+.scenter{position:relative;z-index:1;text-align:center}
+.spct{font-size:26px;font-weight:800;color:var(--amber);line-height:1}
+.slbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.srow{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.sdot{width:7px;height:7px;border-radius:50%;margin-right:5px;flex-shrink:0}
+.sname{display:flex;align-items:center;font-size:11px;color:var(--dim);flex:1}
+.snum{font-size:12px;font-weight:700}
+.sbar{height:3px;background:var(--border);border-radius:2px;margin-bottom:7px;overflow:hidden}
+.sfill{height:100%;border-radius:2px;transition:width 1.2s ease}
+/* PLATFORM */
+.pi{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.pico{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.pname{font-size:11px;color:var(--dim);flex:1}
+.pbg{flex:2;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.pfill{height:100%;border-radius:3px;transition:width 1.2s ease}
+.ppct{font-size:10px;font-weight:700;min-width:26px;text-align:right}
+/* MAP */
+#mapWrap{position:relative;width:100%;background:var(--card2);border-radius:8px;overflow:hidden}
+#mexicoSVG{width:100%;height:auto;display:block}
+.map-tooltip{position:absolute;background:#0d1626;border:1px solid var(--bhi);border-radius:8px;padding:10px 13px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:20;min-width:180px}
+.tt-name{font-size:13px;font-weight:700;margin-bottom:6px}
+.tt-row{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-bottom:3px}
+.tt-val{font-weight:600;color:var(--text)}
+/* MAP LEGEND */
+.map-legend{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}
+.ml-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim)}
+.ml-dot{width:12px;height:12px;border-radius:2px}
+/* TOPICS */
+.tcloud{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.tc{border-radius:14px;padding:4px 10px;font-weight:500;cursor:default;border:1px solid transparent;transition:transform .15s}
+.tc:hover{transform:scale(1.04)}
+/* DEMANDS */
+.dr{margin-bottom:8px}
+.dh{display:flex;justify-content:space-between;margin-bottom:2px}
+.dtxt{font-size:11px;color:var(--dim)}
+.dpct{font-size:11px;font-weight:700;color:var(--amber)}
+.dbg{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.dbar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),var(--blue));transition:width 1.2s ease}
+/* PREDICTIONS */
+.pred-item{background:var(--card2);border-radius:7px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
+.pred-ico{font-size:20px;flex-shrink:0}
+.pred-title{font-size:12px;font-weight:600;margin-bottom:2px}
+.pred-val{font-size:18px;font-weight:800}
+.pred-sub{font-size:10px;color:var(--muted)}
+/* STRATEGY */
+.ai{background:var(--card2);border-left:3px solid var(--ac,var(--amber));border-radius:7px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:flex-start;gap:9px}
+.aico{font-size:16px;flex-shrink:0}
+.atitle{font-size:12px;font-weight:700;margin-bottom:2px}
+.adesc{font-size:11px;color:var(--muted);line-height:1.5}
+/* FEED */
+.fscroll{max-height:460px;overflow-y:auto}
+.fscroll::-webkit-scrollbar{width:3px}
+.fscroll::-webkit-scrollbar-thumb{background:var(--bhi);border-radius:2px}
+.mi{background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin-bottom:5px}
+.mtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.msrc{font-size:10px;font-weight:600;color:var(--dim);display:flex;align-items:center;gap:4px}
+.mdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.mdate{font-size:9px;color:var(--muted)}
+.mbody{font-size:11px;color:var(--dim);line-height:1.45}
+.sb{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700;text-transform:uppercase}
+.sp{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.sn{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.su{background:rgba(100,116,139,.12);color:#94a3b8;border:1px solid rgba(100,116,139,.3)}
+/* MINI STAT */
+.mstat{background:var(--card2);border-radius:7px;padding:10px 12px;border:1px solid var(--border);text-align:center}
+.mstat-val{font-size:20px;font-weight:800;line-height:1}
+.mstat-lbl{font-size:10px;color:var(--muted);margin-top:3px}
+/* EVTAG */
+.evtag{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:5px;font-size:10px;margin:3px 3px 0 0}
+/* TREND NOTES */
+.tnotes{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.tn{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--dim)}
+.tnl{width:14px;height:2px;border-radius:1px;flex-shrink:0}
+footer{text-align:center;padding:12px;color:var(--muted);font-size:10px;border-top:1px solid var(--border)}
+footer b{color:var(--cyan)}
+@media(max-width:1100px){.r1,.r3,.r4,.r5{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
+/* LEAFLET MAP */
+#mapLeaflet{width:100%;height:500px;border-radius:8px;overflow:hidden}
+.leaflet-container{background:#060b18!important}
+.leaflet-popup-content-wrapper{background:#0d1626!important;border:1px solid #1a2f50!important;color:#e2e8f0!important;border-radius:9px!important;box-shadow:0 4px 24px rgba(0,0,0,.5)!important}
+.leaflet-popup-tip{background:#0d1626!important}
+.leaflet-popup-close-button{color:#94a3b8!important}
+.leaflet-control-zoom a{background:#0d1626!important;color:#94a3b8!important;border-color:#1a2f50!important}
+.leaflet-control-zoom a:hover{background:#0f1c34!important;color:#e2e8f0!important}
+.leaflet-control-attribution{background:rgba(6,11,24,.7)!important;color:#64748b!important}
+.leaflet-control-attribution a{color:#3b82f6!important}
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<header class="hdr">
+  <div style="display:flex;align-items:center">
+    <div class="logo">Polit<span>IQ</span><em>MONITOR</em></div>
+    <div class="sep"></div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <div class="av">CS</div>
+      <div><div class="cname">Claudia Sheinbaum</div><div class="cmeta">Presidenta · Morena · México</div></div>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="ptag">2 Feb — 4 Mar 2026</div>
+    <div class="live"><div class="ldot"></div>En Vivo</div>
+    <div id="clock"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 6 KPIs -->
+  <div class="kpis">
+    <div class="kpi" style="--kc:var(--blue)"><div class="klbl">Total Menciones</div><div class="kval" id="k1">0</div><div class="ksub"><span class="up">▲ 12%</span> vs anterior</div></div>
+    <div class="kpi" style="--kc:var(--cyan)"><div class="klbl">Alcance Redes</div><div class="kval" id="k2">0</div><div class="ksub">personas alcanzadas</div></div>
+    <div class="kpi" style="--kc:var(--purple)"><div class="klbl">Interacciones</div><div class="kval" id="k3">0</div><div class="ksub"><span class="up">▲ 8%</span> engagement</div></div>
+    <div class="kpi" style="--kc:var(--amber)"><div class="klbl">Índice Aprobación</div><div class="kval" id="k4">0%</div><div class="ksub"><span class="dn">▼ 3pts</span> vs mes ant.</div></div>
+    <div class="kpi" style="--kc:var(--green)"><div class="klbl">Menciones Sociales</div><div class="kval" id="k5">0</div><div class="ksub">en RRSS directas</div></div>
+    <div class="kpi" style="--kc:var(--red)"><div class="klbl">Riesgo Político</div><div class="kval" style="font-size:15px">MEDIO-ALTO</div><div class="ksub"><span style="color:var(--amber)">⚠</span> Reforma Electoral</div></div>
+  </div>
+
+  <!-- ROW 1: Sentimiento | Trend+Reach | Plataformas -->
+  <div class="r1">
+
+    <div class="card">
+      <div class="ctitle">📊 Sentimiento Global</div>
+      <div class="scwrap">
+        <canvas id="sentChart" width="148" height="148"></canvas>
+        <div class="scenter"><div class="spct">21%</div><div class="slbl">Aprobación<br>efectiva</div></div>
+      </div>
+      <div class="srow"><div class="sname"><div class="sdot" style="background:#10b981"></div>Positivo</div><div class="snum" style="color:#10b981">14%</div></div>
+      <div class="sbar"><div class="sfill" id="sf1" style="background:#10b981;width:0%"></div></div>
+      <div class="srow"><div class="sname"><div class="sdot" style="background:#ef4444"></div>Negativo</div><div class="snum" style="color:#ef4444">46%</div></div>
+      <div class="sbar"><div class="sfill" id="sf2" style="background:#ef4444;width:0%"></div></div>
+      <div class="srow"><div class="sname"><div class="sdot" style="background:#475569"></div>Neutro</div><div class="snum" style="color:#94a3b8">40%</div></div>
+      <div class="sbar"><div class="sfill" id="sf3" style="background:#475569;width:0%"></div></div>
+      <div style="margin-top:10px;padding:8px 10px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:6px">
+        <div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:2px">⚠ Zona de Riesgo</div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.4">Negativo supera 3× al positivo. Reforma Electoral domina la narrativa.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+        <div class="ctitle" style="margin:0">📈 Tendencia Diaria de Menciones</div>
+        <div class="tnotes">
+          <div class="tn"><div class="tnl" style="background:#3b82f6"></div>Total</div>
+          <div class="tn"><div class="tnl" style="background:#10b981"></div>Positivas</div>
+          <div class="tn"><div class="tnl" style="background:#ef4444;opacity:.7"></div>Negativas</div>
+          <div class="tn"><div class="tnl" style="background:#f59e0b;border-style:dashed"></div>Proyección</div>
+        </div>
+      </div>
+      <canvas id="trendChart" style="display:block;width:100%" height="180"></canvas>
+      <div style="margin-top:5px">
+        <span class="evtag" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber)">🔫 19 Feb — El Mencho</span>
+        <span class="evtag" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red)">⚡ 22 Feb — Pico negativo</span>
+        <span class="evtag" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:var(--blue)">📅 27 Feb — Récord 1,930</span>
+      </div>
+      <!-- Segunda gráfica: Alcance en Redes -->
+      <div class="ctitle" style="margin-top:14px;margin-bottom:6px">📡 Alcance Diario en Redes Sociales</div>
+      <canvas id="reachChart" style="display:block;width:100%" height="120"></canvas>
+      <div style="margin-top:4px;font-size:10px;color:var(--muted)">
+        Pico máximo: <b style="color:var(--cyan)">10.5M</b> el 26 Feb (Reforma Electoral viral) · Media del periodo: <b style="color:var(--dim)">1.4M</b>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">📡 Origen de Menciones</div>
+      <div id="platList"></div>
+      <div style="margin-top:12px"><canvas id="platChart" width="192" height="192"></canvas></div>
+    </div>
+
+  </div><!-- /r1 -->
+
+  <!-- ROW 2: MAPA DE MÉXICO -->
+  <div class="card r2">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <div class="ctitle" style="margin:0">🗺 Mapa de Calor Político — Aprobación por Estado · México</div>
+      <div class="map-legend">
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(16,185,129,.5);border:1px solid #10b981"></div>Alta aprobación &gt;55%</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(245,158,11,.5);border:1px solid #f59e0b"></div>Media 45-55%</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(239,68,68,.5);border:1px solid #ef4444"></div>Baja &lt;45%</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(100,116,139,.5);border:1px solid #64748b"></div>Sin datos</div>
+      </div>
+    </div>
+    <div id="mapWrap" style="position:relative">
+      <div id="mapLeaflet"></div>
+    </div>
+  </div><!-- /r2 -->
+
+  <!-- ROW 3: Topics | Demands+Stats | Predictions -->
+  <div class="r3">
+
+    <div class="card">
+      <div class="ctitle">🔥 Temas más Discutidos</div>
+      <div id="topicsCloud"></div>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div class="ctitle">📊 Evolución del Sentimiento por Semana</div>
+      <canvas id="sentWeekChart" style="display:block;width:100%" height="130"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">📢 Demandas Ciudadanas</div>
+      <div id="demandsList"></div>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div class="ctitle">📅 Actividad por Día de la Semana</div>
+      <canvas id="dowChart" style="display:block;width:100%" height="120"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">🔮 Proyecciones — Próximos 7 días</div>
+      <div id="predList"></div>
+      <div style="height:1px;background:var(--border);margin:12px 0"></div>
+      <div class="ctitle">⚡ Indicadores Clave</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px" id="miniStats"></div>
+    </div>
+
+  </div><!-- /r3 -->
+
+  <!-- ROW 4: Estrategia | Feed -->
+  <div class="r4">
+    <div class="card">
+      <div class="ctitle">🧠 Inteligencia Estratégica &amp; Recomendaciones Tácticas</div>
+      <div id="strategyList"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">📰 Feed de Menciones Recientes</div>
+      <div class="fscroll" id="feed"></div>
+    </div>
+  </div>
+
+  <!-- ROW 5: Estadísticas adicionales -->
+  <div class="r5">
+    <div class="card">
+      <div class="ctitle">📉 Ratio Negativo/Positivo</div>
+      <canvas id="ratioChart" style="display:block;width:100%" height="120"></canvas>
+      <div style="margin-top:6px;font-size:10px;color:var(--muted)">Pico: 5.1× el 22 Feb · Actual: 3.3×</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">💬 Distribución de Interacciones</div>
+      <canvas id="engChart" style="display:block;width:100%" height="120"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle">🕐 Actividad por Hora del Día</div>
+      <canvas id="hourChart" style="display:block;width:100%" height="120"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle">📈 Velocidad de Viralización</div>
+      <canvas id="viralChart" style="display:block;width:100%" height="120"></canvas>
+      <div style="margin-top:6px;font-size:10px;color:var(--muted)">Máx viral: 26 Feb · Velocidad: +312% vs baseline</div>
+    </div>
+  </div>
+
+</div>
+
+<footer><b>PolitIQ Monitor</b> · Inteligencia Electoral en Tiempo Real · 2 Feb – 4 Mar 2026 · <b>DEMO</b></footer>
+
+<!-- TOOLTIP global -->
+<script>
+'use strict';
+/* ════════ DATOS ════════ */
+var D = {
+  daily:[
+    {d:'2/F',m:1732,p:35,n:169,r:50788},{d:'3/F',m:1760,p:42,n:152,r:7090},{d:'4/F',m:1742,p:31,n:147,r:10598},
+    {d:'5/F',m:1783,p:47,n:121,r:5335},{d:'6/F',m:1142,p:31,n:96,r:15680},{d:'7/F',m:1447,p:25,n:129,r:21503},
+    {d:'8/F',m:1603,p:42,n:158,r:47633},{d:'9/F',m:1404,p:44,n:128,r:22291},{d:'10/F',m:1792,p:47,n:136,r:22166},
+    {d:'11/F',m:1573,p:35,n:150,r:25062},{d:'12/F',m:1615,p:33,n:141,r:20498},{d:'13/F',m:1358,p:33,n:125,r:33821},
+    {d:'14/F',m:1337,p:30,n:134,r:5532},{d:'15/F',m:1590,p:43,n:135,r:7054},{d:'16/F',m:1649,p:37,n:155,r:21853},
+    {d:'17/F',m:1507,p:28,n:112,r:44060},{d:'18/F',m:1326,p:37,n:90,r:12237},
+    {d:'19/F',m:1790,p:54,n:196,r:5272106},{d:'20/F',m:1812,p:78,n:272,r:912999},
+    {d:'21/F',m:1789,p:64,n:330,r:2411846},{d:'22/F',m:1791,p:69,n:379,r:3792120},
+    {d:'23/F',m:1876,p:81,n:245,r:1980993},{d:'24/F',m:1596,p:52,n:294,r:3606496},
+    {d:'25/F',m:1823,p:76,n:194,r:4635105},{d:'26/F',m:1875,p:55,n:232,r:10459051},
+    {d:'27/F',m:1930,p:77,n:255,r:2226258},{d:'28/F',m:1733,p:61,n:293,r:1207221},
+    {d:'1/M',m:1744,p:102,n:246,r:1055084},{d:'2/M',m:1656,p:72,n:218,r:2603427},
+    {d:'3/M',m:412,p:28,n:122,r:2046371}
+  ],
+  platforms:[
+    {n:'Noticias',   e:'📰',pct:46,c:'#3b82f6'},
+    {n:'Otros SM',   e:'🌐',pct:24,c:'#8b5cf6'},
+    {n:'X/Twitter',  e:'𝕏', pct:12,c:'#60a5fa'},
+    {n:'TikTok',     e:'🎵',pct:6, c:'#ec4899'},
+    {n:'Videos',     e:'▶', pct:6, c:'#f59e0b'},
+    {n:'LinkedIn',   e:'💼',pct:4, c:'#0ea5e9'},
+    {n:'Web',        e:'🔗',pct:2, c:'#10b981'}
+  ],
+  /* Mapa de estados Mexico con coordenadas SVG simplificadas */
+  states:[
+    {id:'BC',  name:'Baja California',   a:42, men:1560, pts:'13,8 52,6 76,122 32,126'},
+    {id:'BCS', name:'Baja California Sur',a:44,men:680,  pts:'32,126 76,122 112,238 128,256 62,196'},
+    {id:'SON', name:'Sonora',             a:41, men:1430, pts:'52,6 176,30 155,165 112,165 76,122'},
+    {id:'CHIH',name:'Chihuahua',          a:38, men:1320, pts:'176,30 264,26 260,176 200,180 155,165'},
+    {id:'COAH',name:'Coahuila',           a:36, men:1180, pts:'264,26 340,50 335,176 260,176'},
+    {id:'NL',  name:'Nuevo León',         a:33, men:2980, pts:'340,50 388,50 384,176 335,176'},
+    {id:'TAM', name:'Tamaulipas',         a:39, men:1290, pts:'388,50 434,76 426,244 384,176'},
+    {id:'SIN', name:'Sinaloa',            a:54, men:1670, pts:'112,165 155,165 168,278 146,295 128,256 112,238'},
+    {id:'DUR', name:'Durango',            a:43, men:820,  pts:'155,165 200,180 205,278 168,278'},
+    {id:'ZAC', name:'Zacatecas',          a:46, men:750,  pts:'200,180 260,176 255,265 230,275 205,278'},
+    {id:'SLP', name:'San Luis Potosí',    a:44, men:980,  pts:'260,176 335,176 330,252 282,260 255,265'},
+    {id:'NAY', name:'Nayarit',            a:50, men:680,  pts:'128,256 146,295 148,342 134,345 120,332'},
+    {id:'JAL', name:'Jalisco',            a:31, men:3890, pts:'146,295 168,278 205,278 215,345 190,360 170,355 148,342'},
+    {id:'AGS', name:'Aguascalientes',     a:34, men:690,  pts:'230,275 255,265 252,290 230,290'},
+    {id:'GTO', name:'Guanajuato',         a:28, men:2140, pts:'252,290 282,260 305,265 307,296 270,306'},
+    {id:'QRO', name:'Querétaro',          a:35, men:1120, pts:'305,265 330,252 330,278 307,296'},
+    {id:'HGO', name:'Hidalgo',            a:52, men:1560, pts:'330,278 356,266 358,290 330,290'},
+    {id:'MICH',name:'Michoacán',          a:51, men:2100, pts:'190,360 215,345 255,305 280,315 280,360 258,376 230,380 204,370'},
+    {id:'MEX', name:'Estado de México',   a:47, men:4200, pts:'280,315 307,296 324,300 325,338 300,350 280,360'},
+    {id:'CDMX',name:'Ciudad de México',   a:62, men:8420, pts:'307,296 322,294 325,300 320,334 308,338'},
+    {id:'TLAX',name:'Tlaxcala',           a:49, men:890,  pts:'330,290 348,288 348,304 330,304'},
+    {id:'PUE', name:'Puebla',             a:45, men:2870, pts:'330,304 348,304 348,288 380,270 396,290 390,350 360,360 336,348 325,338 320,334'},
+    {id:'MOR', name:'Morelos',            a:48, men:1240, pts:'300,350 325,338 336,348 330,362 310,367'},
+    {id:'VER', name:'Veracruz',           a:56, men:3780, pts:'356,266 426,244 420,356 406,370 390,350 380,270'},
+    {id:'GRO', name:'Guerrero',           a:58, men:2340, pts:'258,376 280,360 300,350 310,367 330,362 336,396 310,415 278,410 258,396'},
+    {id:'OAX', name:'Oaxaca',             a:68, men:3210, pts:'336,396 360,360 390,350 406,370 406,416 376,422 350,415'},
+    {id:'CHIS',name:'Chiapas',            a:65, men:2890, pts:'406,370 420,356 440,366 450,402 438,422 416,428'},
+    {id:'TAB', name:'Tabasco',            a:71, men:1980, pts:'426,244 453,250 460,345 440,366 420,356'},
+    {id:'CAM', name:'Campeche',           a:55, men:620,  pts:'453,250 506,238 510,315 490,370 460,380 460,345'},
+    {id:'YUC', name:'Yucatán',            a:37, men:1040, pts:'506,238 556,233 558,276 510,315'},
+    {id:'QROO',name:'Quintana Roo',       a:47, men:890,  pts:'558,276 596,240 600,400 566,403 510,315'},
+    {id:'AGO', name:'Aguascalientes (d)', a:34, men:690,  pts:''}  /* placeholder */
+  ],
+  topics:[
+    {t:'Reforma Electoral',c:420,s:'neg',sz:17},{t:'Seguridad Nacional',c:287,s:'pos',sz:15},
+    {t:'Copa Mundial 2026',c:195,s:'pos',sz:14},{t:'Trump / EE.UU.',c:178,s:'neu',sz:13},
+    {t:'Captura El Mencho',c:156,s:'pos',sz:13},{t:'AMLO / Morena',c:143,s:'neg',sz:13},
+    {t:'IMSS / Salud',c:120,s:'pos',sz:12},{t:'Corrupción',c:98,s:'neg',sz:12},
+    {t:'Banamex',c:87,s:'neu',sz:11},{t:'Derechos Humanos',c:76,s:'neg',sz:11},
+    {t:'Economía',c:62,s:'neg',sz:11},{t:'Paz Mundial',c:58,s:'pos',sz:11},
+    {t:'Empleo',c:54,s:'neg',sz:11},{t:'Infraestructura',c:48,s:'pos',sz:11}
+  ],
+  demands:[
+    {t:'Reducción de inseguridad',p:78,i:'🔒'},
+    {t:'Reforma electoral transparente',p:65,i:'🗳️'},
+    {t:'Empleo y crecimiento',p:61,i:'💼'},
+    {t:'Salud pública accesible',p:58,i:'🏥'},
+    {t:'Combate a la corrupción',p:54,i:'⚖️'},
+    {t:'Vivienda digna',p:42,i:'🏠'},
+    {t:'Educación de calidad',p:38,i:'📚'}
+  ],
+  strategy:[
+    {i:'🚨',c:'#ef4444',t:'Crisis: Reforma Electoral',d:'46% del sentimiento negativo es reforma electoral. Narrativa "nadie la pidió" viral. Reencuadre urgente hacia beneficios ciudadanos concretos.'},
+    {i:'⚡',c:'#10b981',t:'Capitalizar: Operativo El Mencho',d:'Mayor pico positivo del periodo (19-23 Feb). Amplificar en NL (33%), Jalisco (31%), Guanajuato (28%) donde la inseguridad es la demanda #1.'},
+    {i:'🏆',c:'#f59e0b',t:'Copa Mundial 2026: Unidad Nacional',d:'Levantó la Copa junto a Bebeto → engagement cross-partido. Producir serie de contenidos de legado. Conecta con jóvenes 18-30.'},
+    {i:'📉',c:'#f59e0b',t:'Territorio Hostil: Occidente y Norte',d:'NL 33%, Jalisco 31%, Guanajuato 28%. Agenda: salud, infraestructura, empleo. Evitar reforma electoral en estas plazas.'},
+    {i:'💪',c:'#10b981',t:'Sur-Sureste: Movilizar la Base',d:'Tabasco 71%, Oaxaca 68%, Chiapas 65%. Generar contenido positivo viral. Movilización para compensar pérdidas en norte.'},
+    {i:'📱',c:'#8b5cf6',t:'TikTok: Canal Subutilizado',d:'Solo 6% de cobertura con alta viralización. Rango 18-30 crítico en 2026. Contenido directo y auténtico. Videos cortos > comunicados oficiales.'},
+    {i:'🌐',c:'#06b6d4',t:'Redes Sociales: Alcance Explosivo',d:'19-26 Feb: alcance disparado a 10.5M/día. Replicar la estrategia de contenido de ese periodo. El timing: 7-9am y 7-9pm son las ventanas de mayor alcance.'},
+    {i:'📊',c:'#3b82f6',t:'Narrativa Positiva: Salud e Infraestructura',d:'IMSS/Salud y Hospitales generan 84% de menciones positivas. Más comunicación sobre obras y resultados concretos en municipios clave.'}
+  ],
+  mentions:[
+    {src:'El Economista',dom:'eleconomista.com.mx',date:'3/Mar',s:0,txt:'Sheinbaum explica que aplazó el envío de la reforma electoral por ajustes finales.'},
+    {src:'La Jornada',dom:'jornada.com.mx',date:'3/Mar',s:0,txt:'Reforma electoral no llegará hoy a San Lázaro; falta consenso con PT y PVEM: Monreal.'},
+    {src:'Infobae México',dom:'infobae.com',date:'23/Feb',s:1,txt:'Gobernadora de Guerrero felicita a Sheinbaum por el operativo contra "El Mencho".'},
+    {src:'TUDN',dom:'tudn.com',date:'3/Mar',s:1,txt:'Sheinbaum levanta la Copa del Mundo junto a Bebeto a 100 días del Mundial 2026.'},
+    {src:'Expansión Política',dom:'expansion.mx',date:'3/Mar',s:0,txt:'Se retrasa envío de Reforma Electoral al Congreso. Líderes morenistas sostienen reunión.'},
+    {src:'SDP Noticias',dom:'sdpnoticias.com',date:'23/Feb',s:-1,txt:'Rubén Moreira busca que PT y PVEM rompan con Morena para frenar la reforma electoral.'},
+    {src:'Reddit /r/Mexico',dom:'reddit.com',date:'25/Feb',s:-1,txt:'SHEINBAUM, NADIE PIDIÓ LA REFORMA — hilo viral 2.4K upvotes.'},
+    {src:'Bluesky / El País',dom:'bsky.app',date:'2/Mar',s:-1,txt:'Sheinbaum condena la escalada en Oriente Próximo: "La ONU dejó de cumplir su labor."'},
+    {src:'TikTok',dom:'tiktok.com',date:'2/Mar',s:0,txt:'Declaraciones de Sheinbaum desató polémica. #mexico #viral 420K vistas.'},
+    {src:'X (Twitter)',dom:'x.com',date:'23/Feb',s:-1,txt:'#NadiePidioLaReforma en tendencia. Miles de interacciones negativas.'},
+    {src:'Wired México',dom:'wired.com',date:'3/Mar',s:0,txt:'El gobierno mexicano ya usa IA pero no hay normas ni estrategia pública.'},
+    {src:'LinkedIn',dom:'linkedin.com',date:'25/Feb',s:0,txt:'La promesa de AMLO sobre Banamex quedó en el olvido con Sheinbaum.'}
+  ]
+};
+
+/* ════════ UTILS ════════ */
+function fmt(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toLocaleString('es-MX')}
+function ac(a){return a>=55?'#10b981':a>=45?'#f59e0b':'#ef4444'}
+function ab(a){return a>=55?'rgba(16,185,129,.22)':a>=45?'rgba(245,158,11,.22)':'rgba(239,68,68,.22)'}
+function abo(a){return a>=55?'rgba(16,185,129,.6)':a>=45?'rgba(245,158,11,.6)':'rgba(239,68,68,.6)'}
+
+/* Reloj */
+function tickClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('es-MX')}
+tickClock();setInterval(tickClock,1000);
+
+/* KPI counters */
+function counter(id,target,sfx){
+  var el=document.getElementById(id);if(!el)return;
+  var t0=Date.now(),dur=1600;
+  (function tick(){var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    el.textContent=fmt(Math.round(e*target))+(sfx||'');if(p<1)requestAnimationFrame(tick)})();
+}
+counter('k1',48187);counter('k2',42582278);counter('k3',125400);counter('k4',21,'%');counter('k5',7072);
+
+/* Barras sentimiento */
+setTimeout(function(){
+  document.getElementById('sf1').style.width='14%';
+  document.getElementById('sf2').style.width='46%';
+  document.getElementById('sf3').style.width='40%';
+},300);
+
+/* ════════ HTML DINÁMICO ════════ */
+
+/* Plataformas */
+var ph='';
+D.platforms.forEach(function(p){
+  ph+='<div class="pi"><div class="pico" style="background:'+p.c+'22">'+p.e+'</div>'
+    +'<div class="pname">'+p.n+'</div>'
+    +'<div class="pbg"><div class="pfill" style="background:'+p.c+';width:'+p.pct+'%"></div></div>'
+    +'<div class="ppct" style="color:'+p.c+'">'+p.pct+'%</div></div>';
+});
+document.getElementById('platList').innerHTML=ph;
+
+/* Temas */
+var tst={pos:{bg:'rgba(16,185,129,.1)',bo:'rgba(16,185,129,.3)',c:'#10b981'},neg:{bg:'rgba(239,68,68,.1)',bo:'rgba(239,68,68,.3)',c:'#ef4444'},neu:{bg:'rgba(100,116,139,.1)',bo:'rgba(100,116,139,.3)',c:'#94a3b8'}};
+var th='';
+D.topics.forEach(function(t){var s=tst[t.s];th+='<div class="tc" style="background:'+s.bg+';border-color:'+s.bo+';color:'+s.c+';font-size:'+t.sz+'px">'+t.t+' <span style="opacity:.4;font-size:10px">'+fmt(t.c)+'</span></div>';});
+document.getElementById('topicsCloud').innerHTML=th;
+
+/* Demandas */
+var dh='';
+D.demands.forEach(function(d){dh+='<div class="dr"><div class="dh"><div class="dtxt">'+d.i+' '+d.t+'</div><div class="dpct">'+d.p+'%</div></div><div class="dbg"><div class="dbar" style="width:'+d.p+'%"></div></div></div>';});
+document.getElementById('demandsList').innerHTML=dh;
+
+/* Predicciones (regresión lineal simple sobre últimos 10 días) */
+var lastN=D.daily.slice(-10).map(function(d,i){return{x:i,m:d.m,p:d.p,n:d.n}});
+function linReg(vals){
+  var n=vals.length,sx=0,sy=0,sxy=0,sxx=0;
+  vals.forEach(function(v,i){sx+=i;sy+=v;sxy+=i*v;sxx+=i*i});
+  var sl=(n*sxy-sx*sy)/(n*sxx-sx*sx);
+  var ic=(sy-sl*sx)/n;
+  return function(x){return Math.max(0,Math.round(sl*x+ic))};
+}
+var predM=linReg(lastN.map(function(d){return d.m}));
+var predP=linReg(lastN.map(function(d){return d.p}));
+var predN=linReg(lastN.map(function(d){return d.n}));
+var baseX=lastN.length;
+var nextMentions=predM(baseX+3);
+var nextPos=predP(baseX+3);
+var nextNeg=predN(baseX+3);
+var trend=(nextMentions>D.daily[D.daily.length-1].m?'▲':'▼');
+var preds=[
+  {i:'📈',c:'var(--blue)',   t:'Menciones proyectadas',     v:fmt(nextMentions),      sub:'media próximos 7 días',trend:trend},
+  {i:'😊',c:'var(--green)',  t:'Menciones positivas est.',  v:fmt(nextPos),            sub:'tendencia al alza si hay logros',trend:'▲'},
+  {i:'📉',c:'var(--red)',    t:'Menciones negativas est.',  v:fmt(nextNeg),            sub:'persistirán si no hay acciones',trend:'▼'},
+  {i:'📊',c:'var(--amber)',  t:'Índice aprobación est.',    v:'18-23%',               sub:'rango si reforma sigue igual',trend:'→'},
+  {i:'📡',c:'var(--purple)', t:'Alcance estimado (RRSS)',   v:'1.8M',                 sub:'por día en redes sociales',trend:'▼'},
+  {i:'⚠',c:'var(--red)',    t:'Riesgo próxima semana',     v:'ALTO',                  sub:'si no hay comunicación ofensiva',trend:''}
+];
+var prh='';
+preds.forEach(function(p){
+  prh+='<div class="pred-item"><div class="pred-ico">'+p.i+'</div>'
+    +'<div><div class="pred-title" style="color:'+p.c+'">'+p.t+'</div>'
+    +'<div class="pred-val" style="color:'+p.c+'">'+p.trend+' '+p.v+'</div>'
+    +'<div class="pred-sub">'+p.sub+'</div></div></div>';
+});
+document.getElementById('predList').innerHTML=prh;
+
+/* Mini stats */
+var totalM=D.daily.reduce(function(s,d){return s+d.m},0);
+var totalP=D.daily.reduce(function(s,d){return s+d.p},0);
+var totalN=D.daily.reduce(function(s,d){return s+d.n},0);
+var avgM=Math.round(totalM/D.daily.length);
+var maxM=Math.max.apply(null,D.daily.map(function(d){return d.m}));
+var ratioPN=(totalN/totalP).toFixed(1);
+var bestDay=D.daily.reduce(function(a,b){return b.p>a.p?b:a});
+var miniS=[
+  {v:fmt(avgM),       l:'Media diaria menciones', c:'var(--blue)'},
+  {v:fmt(maxM),       l:'Pico máximo (27 Feb)',    c:'var(--cyan)'},
+  {v:ratioPN+'×',     l:'Ratio neg/pos',           c:'var(--red)'},
+  {v:fmt(totalP),     l:'Total positivas',         c:'var(--green)'},
+  {v:fmt(totalN),     l:'Total negativas',         c:'var(--red)'},
+  {v:bestDay.d,       l:'Mejor día (positivas)',   c:'var(--amber)'},
+  {v:'86,913',        l:'Likes sociales',          c:'var(--purple)'},
+  {v:'125,400',       l:'Interacciones totales',   c:'var(--blue)'}
+];
+var msh='';
+miniS.forEach(function(s){msh+='<div class="mstat"><div class="mstat-val" style="color:'+s.c+'">'+s.v+'</div><div class="mstat-lbl">'+s.l+'</div></div>';});
+document.getElementById('miniStats').innerHTML=msh;
+
+/* Estrategia */
+var sh='';
+D.strategy.forEach(function(a){sh+='<div class="ai" style="--ac:'+a.c+'"><div class="aico">'+a.i+'</div><div><div class="atitle" style="color:'+a.c+'">'+a.t+'</div><div class="adesc">'+a.d+'</div></div></div>';});
+document.getElementById('strategyList').innerHTML=sh;
+
+/* Feed */
+var scls={1:'sp','-1':'sn',0:'su'};var slbl={1:'Positivo','-1':'Negativo',0:'Neutro'};
+var fh='';
+D.mentions.forEach(function(m){
+  var cc=m.s===1?'#10b981':m.s===-1?'#ef4444':'#64748b';
+  fh+='<div class="mi"><div class="mtop">'
+    +'<div class="msrc"><div class="mdot" style="background:'+cc+'"></div>'+m.src+' <span style="color:var(--muted);font-weight:400">'+m.dom+'</span></div>'
+    +'<div style="display:flex;align-items:center;gap:4px"><span class="sb '+(scls[m.s]||'su')+'">'+(slbl[m.s]||'Neutro')+'</span><span class="mdate">'+m.date+'</span></div>'
+    +'</div><div class="mbody">'+m.txt+'</div></div>';
+});
+document.getElementById('feed').innerHTML=fh;
+
+/* ════════ MAPA REAL DE MÉXICO — Leaflet + CartoDB ════════ */
+(function(){
+  var stateCoords=[
+    {id:'BC',  name:'Baja California',    a:42, men:1560, lat:30.5,  lng:-116.0},
+    {id:'BCS', name:'Baja Cal. Sur',      a:44, men:680,  lat:25.0,  lng:-111.0},
+    {id:'SON', name:'Sonora',             a:41, men:1430, lat:29.1,  lng:-110.8},
+    {id:'CHIH',name:'Chihuahua',          a:38, men:1320, lat:28.6,  lng:-106.1},
+    {id:'COAH',name:'Coahuila',           a:36, men:1180, lat:27.1,  lng:-102.1},
+    {id:'NL',  name:'Nuevo León',         a:33, men:2980, lat:25.6,  lng:-99.9},
+    {id:'TAM', name:'Tamaulipas',         a:39, men:1290, lat:24.3,  lng:-98.8},
+    {id:'SIN', name:'Sinaloa',            a:54, men:1670, lat:25.0,  lng:-107.4},
+    {id:'DUR', name:'Durango',            a:43, men:820,  lat:24.6,  lng:-105.1},
+    {id:'ZAC', name:'Zacatecas',          a:46, men:750,  lat:23.0,  lng:-102.6},
+    {id:'SLP', name:'San Luis Potosí',    a:44, men:980,  lat:22.5,  lng:-100.5},
+    {id:'NAY', name:'Nayarit',            a:50, men:680,  lat:21.7,  lng:-104.8},
+    {id:'JAL', name:'Jalisco',            a:31, men:3890, lat:20.4,  lng:-103.2},
+    {id:'AGS', name:'Aguascalientes',     a:34, men:690,  lat:21.9,  lng:-102.3},
+    {id:'GTO', name:'Guanajuato',         a:28, men:2140, lat:21.0,  lng:-101.3},
+    {id:'QRO', name:'Querétaro',          a:35, men:1120, lat:20.5,  lng:-100.1},
+    {id:'HGO', name:'Hidalgo',            a:52, men:1560, lat:20.4,  lng:-98.8},
+    {id:'MICH',name:'Michoacán',          a:51, men:2100, lat:19.2,  lng:-101.9},
+    {id:'MEX', name:'Edo. de México',     a:47, men:4200, lat:19.4,  lng:-99.9},
+    {id:'CDMX',name:'Ciudad de México',   a:62, men:8420, lat:19.43, lng:-99.13},
+    {id:'TLAX',name:'Tlaxcala',           a:49, men:890,  lat:19.32, lng:-98.23},
+    {id:'PUE', name:'Puebla',             a:45, men:2870, lat:18.9,  lng:-98.2},
+    {id:'MOR', name:'Morelos',            a:48, men:1240, lat:18.7,  lng:-99.1},
+    {id:'VER', name:'Veracruz',           a:56, men:3780, lat:19.0,  lng:-96.7},
+    {id:'GRO', name:'Guerrero',           a:58, men:2340, lat:17.6,  lng:-100.0},
+    {id:'OAX', name:'Oaxaca',             a:68, men:3210, lat:17.0,  lng:-96.8},
+    {id:'CHIS',name:'Chiapas',            a:65, men:2890, lat:16.5,  lng:-92.7},
+    {id:'TAB', name:'Tabasco',            a:71, men:1980, lat:18.2,  lng:-92.5},
+    {id:'CAM', name:'Campeche',           a:55, men:620,  lat:19.8,  lng:-90.5},
+    {id:'YUC', name:'Yucatán',            a:37, men:1040, lat:20.9,  lng:-89.6},
+    {id:'QROO',name:'Quintana Roo',       a:47, men:890,  lat:19.2,  lng:-88.5}
+  ];
+
+  var map=L.map('mapLeaflet',{
+    center:[23.5,-102],
+    zoom:5,
+    zoomControl:true,
+    scrollWheelZoom:false,
+    attributionControl:true
+  });
+
+  /* CartoDB Dark Matter — fondo oscuro que combina con el tema */
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+    subdomains:'abcd',maxZoom:18
+  }).addTo(map);
+
+  stateCoords.forEach(function(s){
+    var col=ac(s.a);
+    var bgCol=ab(s.a);
+    var boCol=abo(s.a);
+    /* Círculo de calor — radio proporcional a menciones */
+    var r=Math.max(18,Math.min(50,s.men/160));
+    var circle=L.circleMarker([s.lat,s.lng],{
+      radius:r,
+      fillColor:col,
+      color:boCol,
+      weight:1.5,
+      opacity:0.9,
+      fillOpacity:0.28
+    }).addTo(map);
+
+    var sent=s.a>=55?'Favorable':s.a>=45?'Neutral':'Desfavorable';
+    var riesgo=s.a<40?'🔴 Alto':s.a<50?'🟡 Medio':'🟢 Bajo';
+    circle.bindPopup(
+      '<div style="font-family:system-ui;min-width:190px">'
+      +'<div style="font-size:13px;font-weight:800;margin-bottom:8px;color:'+col+'">'+s.name+'</div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span style="color:#94a3b8">Aprobación</span><span style="font-weight:700;color:'+col+'">'+s.a+'%</span></div>'
+      +'<div style="height:4px;background:#1a2f50;border-radius:2px;margin-bottom:8px;overflow:hidden"><div style="height:100%;width:'+s.a+'%;background:'+col+'"></div></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:#94a3b8">Menciones</span><span style="font-weight:700;color:#e2e8f0">'+fmt(s.men)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:#94a3b8">Sentimiento</span><span style="font-weight:700;color:'+col+'">'+sent+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#94a3b8">Riesgo</span><span style="font-weight:700">'+riesgo+'</span></div>'
+      +'</div>',
+      {maxWidth:220}
+    );
+
+    /* Etiqueta con ID y porcentaje */
+    L.marker([s.lat,s.lng],{
+      icon:L.divIcon({
+        className:'',
+        html:'<div style="font-size:9px;font-weight:800;color:'+col+';text-shadow:0 1px 4px #000,0 0 8px #000;text-align:center;line-height:1.3;pointer-events:none">'+s.id+'<br><span style="font-size:10px">'+s.a+'%</span></div>',
+        iconSize:[44,26],
+        iconAnchor:[22,13]
+      })
+    }).addTo(map);
+  });
+})();
+
+/* ════════ CANVAS CHARTS ════════ */
+
+/* Donut helper */
+function donut(id,segs,W,H){
+  var canvas=document.getElementById(id);if(!canvas||!canvas.getContext)return;
+  var ctx=canvas.getContext('2d');
+  var cx=W/2,cy=H/2,outerR=W*0.44,innerR=W*0.28;
+  var total=segs.reduce(function(s,d){return s+d.v},0);
+  var t0=Date.now(),dur=1100;
+  var CARD='#0d1626';
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,H);
+    var a=-Math.PI/2;
+    segs.forEach(function(sg){
+      var sw=(sg.v/total)*Math.PI*2*e;
+      ctx.beginPath();ctx.arc(cx,cy,outerR,a,a+sw);ctx.arc(cx,cy,innerR,a+sw,a,true);
+      ctx.closePath();ctx.fillStyle=sg.c;ctx.fill();
+      ctx.beginPath();ctx.moveTo(cx,cy);
+      ctx.lineTo(cx+Math.cos(a)*outerR*1.04,cy+Math.sin(a)*outerR*1.04);
+      ctx.strokeStyle=CARD;ctx.lineWidth=2;ctx.stroke();
+      a+=sw;
+    });
+    ctx.beginPath();ctx.arc(cx,cy,innerR,0,Math.PI*2);ctx.fillStyle=CARD;ctx.fill();
+    if(p<1)requestAnimationFrame(draw);
+  })();
+}
+donut('sentChart',[{v:14,c:'#10b981bb'},{v:46,c:'#ef4444bb'},{v:40,c:'#374151aa'}],148,148);
+donut('platChart',D.platforms.map(function(p){return{v:p.pct,c:p.c+'bb'}}),192,192);
+
+/* Line chart helper */
+function lineChart(id,datasets,labels,H,opts){
+  var canvas=document.getElementById(id);if(!canvas||!canvas.getContext)return;
+  opts=opts||{};
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-30,300);
+  canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var pad={t:8,r:opts.r||40,b:28,l:opts.l||46};
+  var cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+  var N=labels.length;
+  var allV=[];datasets.forEach(function(ds){allV=allV.concat(ds.data)});
+  var maxV=opts.maxV||Math.max.apply(null,allV)||1;
+  var minV=opts.minV||0;
+  function xAt(i){return pad.l+(i/(N-1))*cW}
+  function yAt(v){return pad.t+cH-((v-minV)/(maxV-minV))*cH}
+  var t0=Date.now(),dur=1300;
+  (function draw(){
+    var prog=Math.min((Date.now()-t0)/dur,1),ease=1-Math.pow(1-prog,3);
+    var nP=Math.max(2,Math.floor(ease*(N-1)));
+    ctx.clearRect(0,0,W,H);
+    /* grid */
+    ctx.strokeStyle='rgba(30,63,128,.25)';ctx.lineWidth=1;ctx.setLineDash([]);
+    for(var gi=0;gi<=4;gi++){
+      var gy=pad.t+(gi/4)*cH;
+      ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cW,gy);ctx.stroke();
+      var gv=((4-gi)/4)*(maxV-minV)+minV;
+      ctx.fillStyle='#64748b';ctx.font='10px system-ui';ctx.textAlign='right';
+      ctx.fillText(opts.fmtY?opts.fmtY(gv):fmt(gv),pad.l-4,gy+4);
+    }
+    /* x labels */
+    var step=Math.max(1,Math.floor(N/8));
+    ctx.fillStyle='#64748b';ctx.font='10px system-ui';ctx.textAlign='center';
+    for(var xi=0;xi<N;xi+=step)ctx.fillText(labels[xi],xAt(xi),H-pad.b+13);
+    /* event marker at idx 17 if trend chart */
+    if(opts.eventIdx!=null&&opts.eventIdx<=nP){
+      var emX=xAt(opts.eventIdx);
+      ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(245,158,11,.4)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(emX,pad.t);ctx.lineTo(emX,pad.t+cH);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    /* draw each dataset */
+    datasets.forEach(function(ds){
+      var data=ds.data;
+      if(ds.fill){
+        var grad=ctx.createLinearGradient(0,pad.t,0,pad.t+cH);
+        grad.addColorStop(0,ds.color+'30');grad.addColorStop(1,ds.color+'02');
+        ctx.beginPath();
+        for(var i=0;i<=nP;i++){var x=xAt(i),y=yAt(data[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+        ctx.lineTo(xAt(nP),pad.t+cH);ctx.lineTo(xAt(0),pad.t+cH);ctx.closePath();
+        ctx.fillStyle=grad;ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.strokeStyle=ds.color;ctx.lineWidth=ds.lw||2;
+      ctx.setLineDash(ds.dash||[]);
+      for(var i=0;i<=nP;i++){var x=xAt(i),y=yAt(data[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+      ctx.stroke();ctx.setLineDash([]);
+    });
+    /* projection dashes */
+    if(opts.proj&&prog===1){
+      var projData=opts.proj;
+      ctx.beginPath();ctx.strokeStyle='rgba(245,158,11,.7)';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+      ctx.moveTo(xAt(N-1),yAt(D.daily[N-1].m));
+      projData.forEach(function(v,i){
+        var fx=pad.l+cW+((i+1)/(projData.length+1))*cW*0.25;
+        var fy=yAt(v);ctx.lineTo(fx,fy);
+      });
+      ctx.stroke();ctx.setLineDash([]);
+    }
+    if(prog<1)requestAnimationFrame(draw);
+  })();
+}
+
+/* Trend chart con proyección */
+var projVals=[];for(var pi=1;pi<=5;pi++)projVals.push(predM(D.daily.length-10+pi));
+var labels=D.daily.map(function(d){return d.d});
+lineChart('trendChart',[
+  {data:D.daily.map(function(d){return d.m}),color:'#3b82f6',lw:2,fill:true},
+  {data:D.daily.map(function(d){return d.p}),color:'#10b981',lw:1.5},
+  {data:D.daily.map(function(d){return d.n}),color:'#ef4444',lw:1.5,dash:[4,3]}
+],labels,180,{eventIdx:17,proj:projVals});
+
+/* Reach chart (bar) */
+(function(){
+  var canvas=document.getElementById('reachChart');if(!canvas||!canvas.getContext)return;
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-30,300);
+  canvas.width=W;canvas.height=120;
+  var ctx=canvas.getContext('2d');
+  var reachData=D.daily.map(function(d){return d.r});
+  var maxR=Math.max.apply(null,reachData);
+  var N=D.daily.length;
+  var pad={t:6,r:10,b:22,l:46};
+  var cW=W-pad.l-pad.r,cH=120-pad.t-pad.b;
+  var bW=Math.max(2,(cW/N)-1);
+  var t0=Date.now(),dur=1100;
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,120);
+    /* grid */
+    ctx.strokeStyle='rgba(30,63,128,.2)';ctx.lineWidth=1;
+    for(var gi=0;gi<=3;gi++){
+      var gy=pad.t+(gi/3)*cH;
+      ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cW,gy);ctx.stroke();
+      ctx.fillStyle='#64748b';ctx.font='9px system-ui';ctx.textAlign='right';
+      ctx.fillText(fmt(((3-gi)/3)*maxR),pad.l-4,gy+4);
+    }
+    var step=Math.max(1,Math.floor(N/8));
+    ctx.fillStyle='#64748b';ctx.font='9px system-ui';ctx.textAlign='center';
+    for(var xi=0;xi<N;xi+=step)ctx.fillText(labels[xi],pad.l+(xi/(N-1))*cW,120-pad.b+12);
+    /* bars */
+    reachData.forEach(function(v,i){
+      var x=pad.l+(i/(N-1))*cW-bW/2;
+      var h=(v/maxR)*cH*e;
+      var y=pad.t+cH-h;
+      var grad=ctx.createLinearGradient(0,y,0,y+h);
+      var baseColor=v>1000000?'#06b6d4':v>100000?'#3b82f6':'#1e4080';
+      grad.addColorStop(0,baseColor+'cc');grad.addColorStop(1,baseColor+'44');
+      ctx.fillStyle=grad;
+      ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,bW,h,2):ctx.rect(x,y,bW,h);
+      ctx.fill();
+    });
+    if(p<1)requestAnimationFrame(draw);
+  })();
+})();
+
+/* Sentimiento por semana (4 semanas) */
+(function(){
+  var weeks=[
+    {lbl:'Sem 1\n(2-8 Feb)',pos:268,neg:1027,neu:3649},
+    {lbl:'Sem 2\n(9-15 Feb)',pos:220,neg:898,neu:3471},
+    {lbl:'Sem 3\n(16-22 Feb)',pos:334,neg:1576,neu:6671},
+    {lbl:'Sem 4\n(23 Feb-3 Mar)',pos:667,neg:1826,neu:6437}
+  ];
+  var canvas=document.getElementById('sentWeekChart');if(!canvas||!canvas.getContext)return;
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-28,200);canvas.width=W;canvas.height=130;
+  var ctx=canvas.getContext('2d');
+  var maxT=Math.max.apply(null,weeks.map(function(w){return w.pos+w.neg+w.neu}));
+  var bW=(W-60)/(weeks.length)-6;
+  var pad={t:6,l:10,b:30,r:10};
+  var cH=130-pad.t-pad.b;
+  var t0=Date.now(),dur=1200;
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,130);
+    weeks.forEach(function(w,i){
+      var x=pad.l+i*(bW+6)+30;
+      var total=w.pos+w.neg+w.neu;
+      var ph=(w.pos/maxT)*cH*e;
+      var nh=(w.neg/maxT)*cH*e;
+      var uh=(w.neu/maxT)*cH*e;
+      var y=pad.t+cH;
+      /* neutro */
+      ctx.fillStyle='#37415166';ctx.fillRect(x,y-uh,bW,uh);
+      /* negativo */
+      ctx.fillStyle='#ef4444aa';ctx.fillRect(x,y-uh-nh,bW,nh);
+      /* positivo */
+      ctx.fillStyle='#10b981cc';ctx.fillRect(x,y-uh-nh-ph,bW,ph);
+      /* label */
+      ctx.fillStyle='#64748b';ctx.font='9px system-ui';ctx.textAlign='center';
+      ctx.fillText(w.lbl.split('\n')[0],x+bW/2,130-pad.b+12);
+      ctx.fillText(w.lbl.split('\n')[1],x+bW/2,130-pad.b+22);
+    });
+    /* leyenda */
+    var leg=[['#10b981','Pos'],['#ef4444','Neg'],['#475569','Neu']];
+    leg.forEach(function(l,i){
+      ctx.fillStyle=l[0];ctx.fillRect(4,pad.t+i*16,8,8);
+      ctx.fillStyle='#94a3b8';ctx.font='9px system-ui';ctx.textAlign='left';
+      ctx.fillText(l[1],14,pad.t+i*16+8);
+    });
+    if(p<1)requestAnimationFrame(draw);
+  })();
+})();
+
+/* Actividad por día de la semana */
+(function(){
+  var dow=[
+    {d:'Lun',m:1650,c:'#3b82f6'},{d:'Mar',m:1820,c:'#3b82f6'},{d:'Mié',m:1750,c:'#3b82f6'},
+    {d:'Jue',m:1680,c:'#3b82f6'},{d:'Vie',m:1590,c:'#3b82f6'},{d:'Sáb',m:1280,c:'#60a5fa'},{d:'Dom',m:1100,c:'#60a5fa'}
+  ];
+  var canvas=document.getElementById('dowChart');if(!canvas||!canvas.getContext)return;
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-28,200);canvas.width=W;canvas.height=120;
+  var ctx=canvas.getContext('2d');
+  var maxV=Math.max.apply(null,dow.map(function(d){return d.m}));
+  var bW=(W-20)/(dow.length)-4;
+  var cH=80;var t0=Date.now(),dur=1000;
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,120);
+    dow.forEach(function(d,i){
+      var x=10+i*(bW+4);
+      var h=(d.m/maxV)*cH*e;
+      ctx.fillStyle=d.c+'99';
+      ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,cH-h+10,bW,h,3);else ctx.rect(x,cH-h+10,bW,h);
+      ctx.fill();
+      ctx.fillStyle='#94a3b8';ctx.font='9px system-ui';ctx.textAlign='center';
+      ctx.fillText(d.d,x+bW/2,115);
+      if(p===1){ctx.fillStyle=d.c;ctx.font='bold 9px system-ui';ctx.fillText(fmt(d.m),x+bW/2,cH-h+8);}
+    });
+    if(p<1)requestAnimationFrame(draw);
+  })();
+})();
+
+/* Ratio negativo/positivo por día */
+lineChart('ratioChart',[
+  {data:D.daily.map(function(d){return d.p>0?+(d.n/d.p).toFixed(2):0}),color:'#ef4444',lw:2,fill:true}
+],labels,120,{fmtY:function(v){return v.toFixed(1)+'×'},maxV:6,l:36,r:10});
+
+/* Engagement donut */
+donut('engChart',[
+  {v:86913,c:'#ef4444bb'},
+  {v:27000,c:'#3b82f6bb'},
+  {v:11487,c:'#10b981bb'}
+],280,120);
+
+/* Hora del día */
+(function(){
+  var hours=[
+    {h:'6am',v:180},{h:'7am',v:320},{h:'8am',v:580},{h:'9am',v:720},{h:'10am',v:650},{h:'11am',v:580},
+    {h:'12pm',v:540},{h:'1pm',v:490},{h:'2pm',v:460},{h:'3pm',v:430},{h:'4pm',v:470},{h:'5pm',v:520},
+    {h:'6pm',v:610},{h:'7pm',v:740},{h:'8pm',v:780},{h:'9pm',v:650},{h:'10pm',v:480},{h:'11pm',v:280}
+  ];
+  var canvas=document.getElementById('hourChart');if(!canvas||!canvas.getContext)return;
+  var parent=canvas.parentElement;
+  var W=Math.max(parent.offsetWidth-28,200);canvas.width=W;canvas.height=120;
+  var ctx=canvas.getContext('2d');
+  var maxV=Math.max.apply(null,hours.map(function(h){return h.v}));
+  var bW=(W-20)/hours.length-1;
+  var cH=85;var t0=Date.now(),dur=1000;
+  (function draw(){
+    var p=Math.min((Date.now()-t0)/dur,1),e=1-Math.pow(1-p,3);
+    ctx.clearRect(0,0,W,120);
+    hours.forEach(function(h,i){
+      var x=10+i*(bW+1);var hv=(h.v/maxV)*cH*e;
+      var isP=h.h==='8am'||h.h==='8pm'||h.h==='7pm';
+      ctx.fillStyle=(isP?'#f59e0b':'#3b82f6')+'88';
+      ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,cH-hv+10,bW,hv,2);else ctx.rect(x,cH-hv+10,bW,hv);
+      ctx.fill();
+      if(i%3===0){ctx.fillStyle='#64748b';ctx.font='8px system-ui';ctx.textAlign='center';ctx.fillText(h.h,x+bW/2,115);}
+    });
+    if(p<1)requestAnimationFrame(draw);
+  })();
+})();
+
+/* Velocidad de viralización */
+lineChart('viralChart',[
+  {data:D.daily.map(function(d,i){return i===0?1:+(d.r/D.daily[0].r).toFixed(2)}),color:'#06b6d4',lw:2,fill:true}
+],labels,120,{fmtY:function(v){return v.toFixed(0)+'×'},maxV:220,l:36,r:10});
+
+</script>
+</body>
+</html>
